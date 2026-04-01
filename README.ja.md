@@ -6,6 +6,8 @@
 
 SimpleCometElevator - Minecraft(Paper)用プラグイン
 
+対応バージョン: **Paper / Minecraft 1.21.x**
+
 最低限の機能を備えた至ってシンプルなエレベータープラグインです。
 
 ## 目次

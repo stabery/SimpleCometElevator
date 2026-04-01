@@ -16,6 +16,8 @@ For full settings and detailed explanations:
 
 A simple elevator plugin for Minecraft (Paper).
 
+Supported version: **Paper / Minecraft 1.21.x**
+
 - Jump to go up
 - Sneak to go down
 - Configurable BossBar, sounds, and cooldown
@@ -70,6 +72,8 @@ Permission: `simplecometelevator.admin`
 ### どんなプラグイン？
 
 Minecraft (Paper) 向けの、シンプルなエレベータープラグインです。
+
+対応バージョン: **Paper / Minecraft 1.21.x**
 
 - ジャンプで上階へ
 - スニークで下階へ

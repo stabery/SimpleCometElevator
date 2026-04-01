@@ -4,6 +4,8 @@
 
 SimpleCometElevator is a plugin for Minecraft (Paper).
 
+Supported version: **Paper / Minecraft 1.21.x**
+
 It is a lightweight, minimal elevator plugin focused on simple setup and use.
 
 ## Table of Contents
