@@ -1,0 +1,62 @@
+elevator:
+
+  floor:
+    base-blocks:
+      - IRON_BLOCK
+      - GOLD_BLOCK
+      - REDSTONE_BLOCK
+      - EMERALD_BLOCK
+      - LAPIS_BLOCK
+      - DIAMOND_BLOCK
+      - NETHERITE_BLOCK
+      - $WOOL
+
+    passable-blocks:
+      - $AIR
+      - WATER
+      - $BUTTONS
+      - $SIGNS
+      - $WALL_SIGNS
+      - $ALL_HANGING_SIGNS
+      - $WALL_HANGING_SIGNS
+      - $BANNERS
+      - $WOOL_CARPETS
+      - MOSS_CARPET
+      - PALE_MOSS_CARPET
+      - $FLOWERS
+      - $RAILS
+      - TRIPWIRE
+      - TRIPWIRE_HOOK
+      - $PRESSURE_PLATES
+      - $TRAPDOORS
+      - $DOORS
+      - SNOW
+
+    required-air: 2
+    tolerance-height: 0.2
+    allow-mixed-blocks: false
+
+  cooldown:
+    enabled: false
+    seconds: 1
+    format: "§cCooldown: {time}s"
+
+  sound:
+    up:
+      enabled: true
+      type: minecraft:entity.experience_orb.pickup
+      volume: 1.0
+      pitch: 0.69
+
+    down:
+      enabled: true
+      type: minecraft:entity.experience_orb.pickup
+      volume: 1.0
+      pitch: 0.56
+
+  floorbar:
+    enabled: true
+    color: BLUE
+    style: SOLID
+    format: "§e{current}F / {total}F"
+    use-y-progress: false

@@ -1,0 +1,16 @@
+name: SimpleCometElevator
+version: '1.0-SNAPSHOT'
+main: H_Amase.simpleCometElevator.SimpleCometElevator
+api-version: '1.21'
+
+commands:
+  simplecometelevator:
+    description: SimpleCometElevator admin command
+    usage: "/<command> <reload|get|set|help>"
+    aliases: [scelevator]
+    permission: simplecometelevator.admin
+
+permissions:
+  simplecometelevator.admin:
+    description: Allows reloading and editing SimpleCometElevator config
+    default: op

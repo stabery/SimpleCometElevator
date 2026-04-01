@@ -1,0 +1,5 @@
+# プロジェクトの除外パス
+target/
+*.iml
+.idea/
+out/
