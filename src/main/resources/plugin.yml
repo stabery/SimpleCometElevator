@@ -1,5 +1,5 @@
 name: SimpleCometElevator
-version: '1.21.x-1.0.0'
+version: '1.0.0-1.21.x'
 main: H_Amase.simpleCometElevator.SimpleCometElevator
 api-version: '1.21'
 

@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>H_Amase</groupId>
-    <artifactId>simplecometelevator</artifactId>
-    <version>1.21.x-1.0.0</version>
+    <artifactId>SimpleCometElevator</artifactId>
+    <version>1.0.0-1.21.x</version>
     <packaging>jar</packaging>
 
-    <name>simplecometelevator</name>
+    <name>SimpleCometElevator</name>
 
     <properties>
         <java.version>21</java.version>
