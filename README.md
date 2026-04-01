@@ -14,7 +14,7 @@ For full settings and detailed explanations:
 
 ### What Is This Plugin?
 
-A simple elevator plugin for Minecraft (Bukkit/Spigot/Paper).
+A simple elevator plugin for Minecraft (Paper).
 
 - Jump to go up
 - Sneak to go down
@@ -69,7 +69,7 @@ Permission: `simplecometelevator.admin`
 
 ### どんなプラグイン？
 
-Minecraft (Bukkit/Spigot/Paper) 向けの、シンプルなエレベータープラグインです。
+Minecraft (Paper) 向けの、シンプルなエレベータープラグインです。
 
 - ジャンプで上階へ
 - スニークで下階へ

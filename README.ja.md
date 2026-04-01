@@ -4,7 +4,7 @@
 
 [English README](README.en.md)
 
-SimpleCometElevator - Minecraft(Bukkit/Spigot/Paper)用プラグイン
+SimpleCometElevator - Minecraft(Paper)用プラグイン
 
 最低限の機能を備えた至ってシンプルなエレベータープラグインです。
 

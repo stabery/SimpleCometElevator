@@ -2,7 +2,7 @@
 
 > For a quick overview, start with [`README.md`](README.md).
 
-SimpleCometElevator is a plugin for Minecraft (Bukkit/Spigot/Paper).
+SimpleCometElevator is a plugin for Minecraft (Paper).
 
 It is a lightweight, minimal elevator plugin focused on simple setup and use.
 
