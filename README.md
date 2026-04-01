@@ -1,4 +1,5 @@
 # SimpleCometElevator Quick Guide / クイックガイド
+https://github.com/stabery/SimpleCometElevator
 
 [日本語版クイックガイド](#日本語クイックガイド)
 

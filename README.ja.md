@@ -526,6 +526,7 @@ elevator:
 
 プラグインバージョン: 1.0.0
 作成者: [Hisui.A](https://github.com/stabery)
+githubリポジトリ: https://github.com/stabery/SimpleCometElevator
 
 - プラグインのバグや要望がある場合は、GitHubリポジトリのIssueにてお知らせください。
 - プルリクエストは大歓迎です。パフォーマンス改善などを目的としたコードの変更は特に歓迎します。
