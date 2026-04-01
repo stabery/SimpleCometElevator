@@ -656,7 +656,7 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
         if (!command.getName().equalsIgnoreCase("simplecometelevator")) {
             return false;
         }
@@ -728,7 +728,7 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
     }
 
     @Override
-    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String @NotNull [] args) {
         if (!command.getName().equalsIgnoreCase("simplecometelevator")) {
             return Collections.emptyList();
         }
@@ -828,48 +828,43 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
             return Boolean.parseBoolean(rawValue);
         }
 
-        if (path.equals(CONFIG_REQUIRED_AIR)) {
-            try {
-                int value = Integer.parseInt(rawValue);
-                if (value < 1) {
-                    throw new IllegalArgumentException("required-airは1以上を指定してください。");
+        switch (path) {
+            case CONFIG_REQUIRED_AIR -> {
+                try {
+                    int value = Integer.parseInt(rawValue);
+                    if (value < 1) {
+                        throw new IllegalArgumentException("required-airは1以上を指定してください。");
+                    }
+                    return value;
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("整数値を指定してください。");
                 }
-                return value;
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("整数値を指定してください。");
             }
-        }
-
-        if (path.equals(CONFIG_TOLERANCE_HEIGHT)
-                || path.equals(CONFIG_COOLDOWN_SECONDS)
-                || path.equals(CONFIG_SOUND_UP_VOLUME)
-                || path.equals(CONFIG_SOUND_UP_PITCH)
-                || path.equals(CONFIG_SOUND_DOWN_VOLUME)
-                || path.equals(CONFIG_SOUND_DOWN_PITCH)) {
-            try {
-                return Double.parseDouble(rawValue);
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("小数値を指定してください。");
+            case CONFIG_TOLERANCE_HEIGHT, CONFIG_COOLDOWN_SECONDS, CONFIG_SOUND_UP_VOLUME, CONFIG_SOUND_UP_PITCH,
+                 CONFIG_SOUND_DOWN_VOLUME, CONFIG_SOUND_DOWN_PITCH -> {
+                try {
+                    return Double.parseDouble(rawValue);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("小数値を指定してください。");
+                }
             }
-        }
-
-        if (path.equals(CONFIG_BOSSBAR_COLOR)) {
-            String normalized = rawValue.toUpperCase(Locale.ROOT);
-            try {
-                org.bukkit.boss.BarColor.valueOf(normalized);
-                return normalized;
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("BossBar colorが不正です。例: BLUE, GREEN, RED");
+            case CONFIG_BOSSBAR_COLOR -> {
+                String normalized = rawValue.toUpperCase(Locale.ROOT);
+                try {
+                    org.bukkit.boss.BarColor.valueOf(normalized);
+                    return normalized;
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("BossBar colorが不正です。例: BLUE, GREEN, RED");
+                }
             }
-        }
-
-        if (path.equals(CONFIG_BOSSBAR_STYLE)) {
-            String normalized = rawValue.toUpperCase(Locale.ROOT);
-            try {
-                org.bukkit.boss.BarStyle.valueOf(normalized);
-                return normalized;
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("BossBar styleが不正です。例: SOLID, SEGMENTED_10");
+            case CONFIG_BOSSBAR_STYLE -> {
+                String normalized = rawValue.toUpperCase(Locale.ROOT);
+                try {
+                    org.bukkit.boss.BarStyle.valueOf(normalized);
+                    return normalized;
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("BossBar styleが不正です。例: SOLID, SEGMENTED_10");
+                }
             }
         }
 
