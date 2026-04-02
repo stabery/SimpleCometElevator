@@ -80,7 +80,7 @@ Place the same floor blocks vertically with enough space between them.
 
 ## Configuration File
 
-`plugins/SympleCometElevator/config.yml`
+`plugins/SimpleCometElevator/config.yml`
 
 ### Admin Commands
 
@@ -440,7 +440,7 @@ elevator:
 
 Plugin version: `1.0.0`
 Author: [Hisui.A](https://github.com/stabery)
-github repository: githubリポジトリ: https://github.com/stabery/SimpleCometElevator
+GitHub repository: https://github.com/stabery/SimpleCometElevator
 
 - If you find bugs or have feature requests, please open an Issue on GitHub.
 - Pull requests are welcome, especially performance improvements.
