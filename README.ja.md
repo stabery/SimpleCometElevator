@@ -1,4 +1,6 @@
 # SimpleCometElevator 使い方（詳細版）
+https://github.com/stabery/SimpleCometElevator
+https://modrinth.com/plugin/simplecometelevator
 
 > 最初に要点だけ確認したい場合は [`README.md`](README.md) を参照してください。
 

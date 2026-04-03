@@ -1,5 +1,6 @@
 # SimpleCometElevator Quick Guide / クイックガイド
 https://github.com/stabery/SimpleCometElevator
+https://modrinth.com/plugin/simplecometelevator
 
 [日本語版クイックガイド](#日本語クイックガイド)
 

@@ -1,4 +1,6 @@
 # SimpleCometElevator Guide (English, Detailed)
+https://github.com/stabery/SimpleCometElevator
+https://modrinth.com/plugin/simplecometelevator
 
 > For a quick overview, start with [`README.md`](README.md).
 
