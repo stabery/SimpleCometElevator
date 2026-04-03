@@ -1,8 +1,8 @@
-  /*
-    汎用プラグイン更新チェッカー！の設定ファイル
-    HisuiPluginUpdateChecker
-    Version 1.0.0
-    */
+
+# 汎用プラグイン更新チェッカー！の設定ファイル
+# HisuiPluginUpdateChecker
+# Version 1.0.0
+
 
 enabled: true
 
@@ -36,7 +36,7 @@ sources:
     display-name: "GitHub"
     page-url: "https://github.com/stabery/SimpleCometElevator"
     # 空なら page-url から GitHub Releases API を自動生成
-    api-url: ""
+    api-url: "https://api.github.com/repos/stabery/SimpleCometElevator/releases/latest"
     latest-version-field: "tag_name"
     latest-version-fallback-field: "name"
     download-url-field: "html_url"
