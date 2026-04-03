@@ -1,0 +1,79 @@
+  /*
+    汎用プラグイン更新チェッカー！の設定ファイル
+    HisuiPluginUpdateChecker
+    Version 1.0.0
+    */
+
+enabled: true
+
+# 更新確認で新しいバージョンが見つかった場合、オンライン管理者にも通知
+notify-online-players-on-check: true
+
+plugin:
+  # プラグイン名
+  display-name: "SimpleCometElevator"
+  # Ko-fi 支援ページURL (任意 / 未設定なら help コマンドに表示しない)
+  kofi-url: ""
+
+permissions:
+  # 更新通知を受け取るプレイヤー権限
+  notify: "simplecometelevator.admin"
+
+request:
+  timeout-seconds: 10
+  # GitHub API 以外を使う場合は必要に応じて変更
+  accept-header: "application/vnd.github+json"
+  # 使用可能プレースホルダ: {plugin_display_name} {plugin_name} {plugin_id} {current_version}
+  user-agent: "{plugin_id}/{current_version}"
+  # GitHub Personal Access Token (省略可)
+  # 設定すると API レート制限が 60 req/h → 5000 req/h に緩和
+  # トークン生成: https://github.com/settings/tokens (必要スコープ: public_repo または無し)
+  github-token: ""
+
+sources:
+  primary:
+    # 主配布元/更新取得元
+    display-name: "GitHub"
+    page-url: "https://github.com/stabery/SimpleCometElevator"
+    # 空なら page-url から GitHub Releases API を自動生成
+    api-url: ""
+    latest-version-field: "tag_name"
+    latest-version-fallback-field: "name"
+    download-url-field: "html_url"
+    # 空なら page-url から GitHub Tags API を自動生成
+    tags-api-url: ""
+    tags-version-field: "name"
+    # 空なら page-url + /tags を使用
+    tags-page-url: ""
+
+  secondary:
+    # 第二リンク先
+    display-name: "Modrinth"
+    page-url: "https://modrinth.com/plugin/simplecometelevator"
+
+versioning:
+  # 例: 1.0.0-1.21.x-beta
+  separator: "-"
+  plugin-version-index: 0
+  minecraft-version-index: 1
+  release-state-index: 2
+  enforce-minecraft-version-match: true
+
+messages:
+  # 使用可能プレースホルダ:
+  # {plugin_display_name} {plugin_name} {plugin_id} {current_version} {latest_version}
+  # {primary_source_name} {secondary_source_name}
+  # {primary_source_url} {secondary_source_url}
+  # {primary_link} {secondary_link}
+  # 旧互換: {download_link} {modrinth_link} {repository_url} {modrinth_url}
+  # {download_url} {permission} {error}
+  # {latest_minecraft_version} {current_minecraft_version}
+  console-update-available: "&e[UpdateChecker] A new version of {plugin_display_name} is available!: &f{latest_version}&e (current: &f{current_version}&e) &7| {primary_source_name}: {primary_link} &7| {secondary_source_name}: {secondary_link}"
+  console-up-to-date: "&7[UpdateChecker] {plugin_display_name} is up to date! Current version: &f{current_version}"
+  console-check-failed: "&c[UpdateChecker] Failed to check updates for {plugin_display_name}: {error}"
+  player-update-available: "&e[UpdateChecker] An update is available for {plugin_display_name}!: &f{latest_version}&7 (current: {current_version}) &7| {primary_source_name}: {primary_link} &7| {secondary_source_name}: {secondary_link}"
+  console-pre-release-available: "&6[UpdateChecker] Pre-release version of {plugin_display_name} is available!: &f{latest_version}&6 (current: &f{current_version}&6) &7| {primary_source_name}: {primary_link} &7| {secondary_source_name}: {secondary_link}"
+  player-pre-release-available: "&6[UpdateChecker] A pre-release update is available for {plugin_display_name}!: &f{latest_version}&7 (current: {current_version}) &7| {primary_source_name}: {primary_link} &7| {secondary_source_name}: {secondary_link}"
+  minecraft-version-mismatch: "&7[UpdateChecker] Update found for {plugin_display_name}, but Minecraft version mismatch. Required: {latest_minecraft_version}, Current: {current_minecraft_version}"
+  # {rate_limit_reset}: レート制限が解除される時刻と残り時間
+  console-rate-limited: "&c[UpdateChecker] GitHub API rate limit exceeded for {plugin_display_name}. Resets at: {rate_limit_reset}"
