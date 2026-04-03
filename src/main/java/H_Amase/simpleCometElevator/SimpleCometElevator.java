@@ -1,11 +1,23 @@
+/**
+* SimpleCometElevator 1.1.0-1.21.x
+*/
+
 package H_Amase.simpleCometElevator;
 
 import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.title.Title;
+import java.time.Duration;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.bukkit.entity.Player;
@@ -15,6 +27,13 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 public final class SimpleCometElevator extends JavaPlugin implements Listener {
@@ -28,19 +47,57 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
     private static final String CONFIG_COOLDOWN_ENABLED = "elevator.cooldown.enabled";
     private static final String CONFIG_COOLDOWN_SECONDS = "elevator.cooldown.seconds";
     private static final String CONFIG_COOLDOWN_FORMAT = "elevator.cooldown.format";
+    private static final String CONFIG_COMMAND_MOVE_ENABLED = "elevator.command.move.enabled";
     private static final String CONFIG_SOUND_UP_ENABLED = "elevator.sound.up.enabled";
-    private static final String CONFIG_SOUND_UP_TYPE = "elevator.sound.up.type";
-    private static final String CONFIG_SOUND_UP_VOLUME = "elevator.sound.up.volume";
-    private static final String CONFIG_SOUND_UP_PITCH = "elevator.sound.up.pitch";
+    private static final String CONFIG_SOUND_UP_BROADCAST = "elevator.sound.up.broadcast";
+    private static final String CONFIG_SOUND_UP_ENTRIES = "elevator.sound.up.entries";
     private static final String CONFIG_SOUND_DOWN_ENABLED = "elevator.sound.down.enabled";
-    private static final String CONFIG_SOUND_DOWN_TYPE = "elevator.sound.down.type";
-    private static final String CONFIG_SOUND_DOWN_VOLUME = "elevator.sound.down.volume";
-    private static final String CONFIG_SOUND_DOWN_PITCH = "elevator.sound.down.pitch";
+    private static final String CONFIG_SOUND_DOWN_BROADCAST = "elevator.sound.down.broadcast";
+    private static final String CONFIG_SOUND_DOWN_ENTRIES = "elevator.sound.down.entries";
+    private static final String CONFIG_SOUND_CMD_UP_ENABLED = "elevator.sound.command.up.enabled";
+    private static final String CONFIG_SOUND_CMD_UP_BROADCAST = "elevator.sound.command.up.broadcast";
+    private static final String CONFIG_SOUND_CMD_UP_ENTRIES = "elevator.sound.command.up.entries";
+    private static final String CONFIG_SOUND_CMD_DOWN_ENABLED = "elevator.sound.command.down.enabled";
+    private static final String CONFIG_SOUND_CMD_DOWN_BROADCAST = "elevator.sound.command.down.broadcast";
+    private static final String CONFIG_SOUND_CMD_DOWN_ENTRIES = "elevator.sound.command.down.entries";
     private static final String CONFIG_BOSSBAR_ENABLED = "elevator.floorbar.enabled";
     private static final String CONFIG_BOSSBAR_COLOR = "elevator.floorbar.color";
     private static final String CONFIG_BOSSBAR_STYLE = "elevator.floorbar.style";
     private static final String CONFIG_BOSSBAR_FORMAT = "elevator.floorbar.format";
     private static final String CONFIG_BOSSBAR_USE_Y_PROGRESS = "elevator.floorbar.use-y-progress";
+    private static final String CONFIG_TITLE_UP_ENABLED = "elevator.title.up.enabled";
+    private static final String CONFIG_TITLE_UP_TITLE = "elevator.title.up.title";
+    private static final String CONFIG_TITLE_UP_SUBTITLE = "elevator.title.up.subtitle";
+    private static final String CONFIG_TITLE_UP_FADE_IN = "elevator.title.up.fade-in";
+    private static final String CONFIG_TITLE_UP_STAY = "elevator.title.up.stay";
+    private static final String CONFIG_TITLE_UP_FADE_OUT = "elevator.title.up.fade-out";
+    private static final String CONFIG_TITLE_DOWN_ENABLED = "elevator.title.down.enabled";
+    private static final String CONFIG_TITLE_DOWN_TITLE = "elevator.title.down.title";
+    private static final String CONFIG_TITLE_DOWN_SUBTITLE = "elevator.title.down.subtitle";
+    private static final String CONFIG_TITLE_DOWN_FADE_IN = "elevator.title.down.fade-in";
+    private static final String CONFIG_TITLE_DOWN_STAY = "elevator.title.down.stay";
+    private static final String CONFIG_TITLE_DOWN_FADE_OUT = "elevator.title.down.fade-out";
+    private static final String CONFIG_TITLE_CMD_UP_ENABLED = "elevator.title.command.up.enabled";
+    private static final String CONFIG_TITLE_CMD_UP_TITLE = "elevator.title.command.up.title";
+    private static final String CONFIG_TITLE_CMD_UP_SUBTITLE = "elevator.title.command.up.subtitle";
+    private static final String CONFIG_TITLE_CMD_UP_FADE_IN = "elevator.title.command.up.fade-in";
+    private static final String CONFIG_TITLE_CMD_UP_STAY = "elevator.title.command.up.stay";
+    private static final String CONFIG_TITLE_CMD_UP_FADE_OUT = "elevator.title.command.up.fade-out";
+    private static final String CONFIG_TITLE_CMD_DOWN_ENABLED = "elevator.title.command.down.enabled";
+    private static final String CONFIG_TITLE_CMD_DOWN_TITLE = "elevator.title.command.down.title";
+    private static final String CONFIG_TITLE_CMD_DOWN_SUBTITLE = "elevator.title.command.down.subtitle";
+    private static final String CONFIG_TITLE_CMD_DOWN_FADE_IN = "elevator.title.command.down.fade-in";
+    private static final String CONFIG_TITLE_CMD_DOWN_STAY = "elevator.title.command.down.stay";
+    private static final String CONFIG_TITLE_CMD_DOWN_FADE_OUT = "elevator.title.command.down.fade-out";
+    private static final String CONFIG_ACTIONBAR_UP_ENABLED = "elevator.actionbar.up.enabled";
+    private static final String CONFIG_ACTIONBAR_UP_FORMAT = "elevator.actionbar.up.format";
+    private static final String CONFIG_ACTIONBAR_DOWN_ENABLED = "elevator.actionbar.down.enabled";
+    private static final String CONFIG_ACTIONBAR_DOWN_FORMAT = "elevator.actionbar.down.format";
+    private static final String CONFIG_ACTIONBAR_CMD_UP_ENABLED = "elevator.actionbar.command.up.enabled";
+    private static final String CONFIG_ACTIONBAR_CMD_UP_FORMAT = "elevator.actionbar.command.up.format";
+    private static final String CONFIG_ACTIONBAR_CMD_DOWN_ENABLED = "elevator.actionbar.command.down.enabled";
+    private static final String CONFIG_ACTIONBAR_CMD_DOWN_FORMAT = "elevator.actionbar.command.down.format";
+    private static final String CONFIG_MESSAGES_LANGUAGE = "messages.language";
 
     /*===== プレイヤー状態管理 =====*/
     private final Set<UUID> elevatorPlayers = new HashSet<>();
@@ -48,6 +105,7 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
     private final Map<UUID, Long> cooldowns = new HashMap<>();
     private final Map<FloorCacheKey, List<Integer>> floorCache = new HashMap<>();
     private final Map<UUID, EvaluatedBase> lastEvaluatedBases = new HashMap<>();
+    private final Map<String, PendingReset> pendingResets = new HashMap<>();
 
     /*===== 設定値 =====*/
     private Set<Material> baseBlocks;
@@ -59,6 +117,7 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
     private boolean cooldownEnabled;
     private long cooldownMillis;
     private String cooldownFormat;
+    private boolean moveCommandEnabled;
 
     private boolean bossBarEnabled;
     private org.bukkit.boss.BarColor bossBarColor;
@@ -66,14 +125,73 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
     private String bossBarFormat;
     private boolean bossBarUseYProgress;
 
-    private boolean upSoundEnabled;
-    private boolean downSoundEnabled;
-    private Sound upSound, downSound;
-    private float upVolume, upPitch;
-    private float downVolume, downPitch;
+    private boolean titleUpEnabled;
+    private String titleUpTitle;
+    private String titleUpSubtitle;
+    private int titleUpFadeIn;
+    private int titleUpStay;
+    private int titleUpFadeOut;
+    private boolean titleDownEnabled;
+    private String titleDownTitle;
+    private String titleDownSubtitle;
+    private int titleDownFadeIn;
+    private int titleDownStay;
+    private int titleDownFadeOut;
+    private boolean titleCmdUpEnabled;
+    private String titleCmdUpTitle;
+    private String titleCmdUpSubtitle;
+    private int titleCmdUpFadeIn;
+    private int titleCmdUpStay;
+    private int titleCmdUpFadeOut;
+    private boolean titleCmdDownEnabled;
+    private String titleCmdDownTitle;
+    private String titleCmdDownSubtitle;
+    private int titleCmdDownFadeIn;
+    private int titleCmdDownStay;
+    private int titleCmdDownFadeOut;
+    private boolean actionBarUpEnabled;
+    private String actionBarUpFormat;
+    private boolean actionBarDownEnabled;
+    private String actionBarDownFormat;
+    private boolean actionBarCmdUpEnabled;
+    private String actionBarCmdUpFormat;
+    private boolean actionBarCmdDownEnabled;
+    private String actionBarCmdDownFormat;
+
+    private boolean upSoundsEnabled;
+    private boolean upSoundsBroadcast;
+    private boolean downSoundsEnabled;
+    private boolean downSoundsBroadcast;
+    private boolean cmdUpSoundsEnabled;
+    private boolean cmdUpSoundsBroadcast;
+    private boolean cmdDownSoundsEnabled;
+    private boolean cmdDownSoundsBroadcast;
+    private List<SoundEntry> upSounds = new ArrayList<>();
+    private List<SoundEntry> downSounds = new ArrayList<>();
+    private List<SoundEntry> cmdUpSounds = new ArrayList<>();
+    private List<SoundEntry> cmdDownSounds = new ArrayList<>();
+
+    private String messageLanguage;
+    private File settingsFolder;
+    private File configFile;
+    private FileConfiguration userConfig;
+    private FileConfiguration jaMessages;
+    private FileConfiguration enMessages;
+
+    /*===== HisuiPluginUpdateChecker連携 =====*/
+    private HisuiPluginUpdateChecker updateChecker;
 
     private static final String ADMIN_PERMISSION = "simplecometelevator.admin";
-    private static final List<String> SUB_COMMANDS = List.of("reload", "get", "set", "help");
+    private static final String MOVE_PERMISSION = "simplecometelevator.move";
+    private static final String MESSAGE_PREFIX = "§8[§bSimpleCometElevator§8] §7";
+    private static final String SETTINGS_DIR_NAME = "user-settings";
+    private static final String CONFIG_FILE_NAME = "config.yml";
+    private static final String MESSAGES_JA_FILE_NAME = "messages_ja.yml";
+    private static final String MESSAGES_EN_FILE_NAME = "messages_en.yml";
+    private static final String RESET_ALL_KEYWORD = "all";
+    private static final String RESET_CONFIRM_KEYWORD = "confirm";
+    private static final long RESET_CONFIRM_TIMEOUT_MILLIS = 30_000L;
+    private static final List<String> ADMIN_SUB_COMMANDS = List.of("reload", "check", "get", "set", "reset", "help", "info");
     private static final List<String> EDITABLE_PATHS = List.of(
             CONFIG_BASE_BLOCKS,
             CONFIG_PASSABLE_BLOCKS,
@@ -83,19 +201,53 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
             CONFIG_COOLDOWN_ENABLED,
             CONFIG_COOLDOWN_SECONDS,
             CONFIG_COOLDOWN_FORMAT,
+            CONFIG_COMMAND_MOVE_ENABLED,
             CONFIG_SOUND_UP_ENABLED,
-            CONFIG_SOUND_UP_TYPE,
-            CONFIG_SOUND_UP_VOLUME,
-            CONFIG_SOUND_UP_PITCH,
+            CONFIG_SOUND_UP_ENTRIES,
             CONFIG_SOUND_DOWN_ENABLED,
-            CONFIG_SOUND_DOWN_TYPE,
-            CONFIG_SOUND_DOWN_VOLUME,
-            CONFIG_SOUND_DOWN_PITCH,
+            CONFIG_SOUND_DOWN_ENTRIES,
+            CONFIG_SOUND_CMD_UP_ENABLED,
+            CONFIG_SOUND_CMD_UP_ENTRIES,
+            CONFIG_SOUND_CMD_DOWN_ENABLED,
+            CONFIG_SOUND_CMD_DOWN_ENTRIES,
             CONFIG_BOSSBAR_ENABLED,
             CONFIG_BOSSBAR_COLOR,
             CONFIG_BOSSBAR_STYLE,
             CONFIG_BOSSBAR_FORMAT,
-            CONFIG_BOSSBAR_USE_Y_PROGRESS
+            CONFIG_BOSSBAR_USE_Y_PROGRESS,
+            CONFIG_TITLE_UP_ENABLED,
+            CONFIG_TITLE_UP_TITLE,
+            CONFIG_TITLE_UP_SUBTITLE,
+            CONFIG_TITLE_UP_FADE_IN,
+            CONFIG_TITLE_UP_STAY,
+            CONFIG_TITLE_UP_FADE_OUT,
+            CONFIG_TITLE_DOWN_ENABLED,
+            CONFIG_TITLE_DOWN_TITLE,
+            CONFIG_TITLE_DOWN_SUBTITLE,
+            CONFIG_TITLE_DOWN_FADE_IN,
+            CONFIG_TITLE_DOWN_STAY,
+            CONFIG_TITLE_DOWN_FADE_OUT,
+            CONFIG_TITLE_CMD_UP_ENABLED,
+            CONFIG_TITLE_CMD_UP_TITLE,
+            CONFIG_TITLE_CMD_UP_SUBTITLE,
+            CONFIG_TITLE_CMD_UP_FADE_IN,
+            CONFIG_TITLE_CMD_UP_STAY,
+            CONFIG_TITLE_CMD_UP_FADE_OUT,
+            CONFIG_TITLE_CMD_DOWN_ENABLED,
+            CONFIG_TITLE_CMD_DOWN_TITLE,
+            CONFIG_TITLE_CMD_DOWN_SUBTITLE,
+            CONFIG_TITLE_CMD_DOWN_FADE_IN,
+            CONFIG_TITLE_CMD_DOWN_STAY,
+            CONFIG_TITLE_CMD_DOWN_FADE_OUT,
+            CONFIG_ACTIONBAR_UP_ENABLED,
+            CONFIG_ACTIONBAR_UP_FORMAT,
+            CONFIG_ACTIONBAR_DOWN_ENABLED,
+            CONFIG_ACTIONBAR_DOWN_FORMAT,
+            CONFIG_ACTIONBAR_CMD_UP_ENABLED,
+            CONFIG_ACTIONBAR_CMD_UP_FORMAT,
+            CONFIG_ACTIONBAR_CMD_DOWN_ENABLED,
+            CONFIG_ACTIONBAR_CMD_DOWN_FORMAT,
+            CONFIG_MESSAGES_LANGUAGE
     );
 
     /**
@@ -103,11 +255,23 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
      * プラグイン初期化
      * ===============================
      */
+    
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        initializeUserSettings();
         loadConfigValues();
         getServer().getPluginManager().registerEvents(this, this);
+
+        /*===== HisuiPluginUpdateChecker連携: 初期化・イベント登録・初回更新確認 =====*/
+        updateChecker = new HisuiPluginUpdateChecker(this);
+        getServer().getPluginManager().registerEvents(updateChecker, this);
+        /*====================================================================*/
+
+        refreshOnlinePlayersElevatorState();
+
+        /*===== HisuiPluginUpdateChecker連携: 起動時更新確認 =====*/
+        updateChecker.checkForUpdates();
+        /*================================================*/
 
         startJumpSuppressTask();
     }
@@ -120,6 +284,7 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
         cooldowns.clear();
         floorCache.clear();
         lastEvaluatedBases.clear();
+        pendingResets.clear();
         Bukkit.getScheduler().cancelTasks(this);
     }
 
@@ -148,58 +313,118 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
     }
 
     /**
+     * 1エントリ分のサウンド設定（type・volume・pitch・遅延ms）
+     */
+    private record SoundEntry(Sound sound, float volume, float pitch, long delayMs) {}
+
+    /**
+     * reset確認待ち状態（pathと有効期限）
+     */
+    private record PendingReset(String path, long expiresAt) {}
+
+    /**
      * ===============================
      * 設定読み込み
      * ===============================
      */
     private void loadConfigValues() {
+        FileConfiguration config = getUserConfig();
 
         /*===== フロアブロック =====*/
         baseBlocks = loadMaterialSet(CONFIG_BASE_BLOCKS, "base-block");
         passableBlocks = loadMaterialSet(CONFIG_PASSABLE_BLOCKS, "passable-block");
         getLogger().info("Base blocks: " + baseBlocks);
         getLogger().info("Passable blocks: " + passableBlocks);
-        requiredAirBlocks = getConfig().getInt(CONFIG_REQUIRED_AIR);
-        toleranceHeight = getConfig().getDouble(CONFIG_TOLERANCE_HEIGHT);
-        allowMixedBlocks = getConfig().getBoolean(CONFIG_ALLOW_MIXED_BLOCKS);
+        requiredAirBlocks = config.getInt(CONFIG_REQUIRED_AIR);
+        toleranceHeight = config.getDouble(CONFIG_TOLERANCE_HEIGHT);
+        allowMixedBlocks = config.getBoolean(CONFIG_ALLOW_MIXED_BLOCKS);
 
         /*===== クールダウン =====*/
-        cooldownEnabled = getConfig().getBoolean(CONFIG_COOLDOWN_ENABLED);
-        cooldownMillis = (long)(getConfig().getDouble(CONFIG_COOLDOWN_SECONDS) * 1000);
-        cooldownFormat = getConfig().getString(CONFIG_COOLDOWN_FORMAT);
+        cooldownEnabled = config.getBoolean(CONFIG_COOLDOWN_ENABLED);
+        cooldownMillis = (long)(config.getDouble(CONFIG_COOLDOWN_SECONDS) * 1000);
+        cooldownFormat = config.getString(CONFIG_COOLDOWN_FORMAT);
+
+        /*===== コマンド =====*/
+        moveCommandEnabled = config.getBoolean(CONFIG_COMMAND_MOVE_ENABLED, true);
 
         /*===== サウンド =====*/
-        upSoundEnabled = getConfig().getBoolean(CONFIG_SOUND_UP_ENABLED);
-        upSound = getSound(CONFIG_SOUND_UP_TYPE);
-        upVolume = (float)getConfig().getDouble(CONFIG_SOUND_UP_VOLUME);
-        upPitch = (float)getConfig().getDouble(CONFIG_SOUND_UP_PITCH);
+        upSoundsEnabled   = config.getBoolean(CONFIG_SOUND_UP_ENABLED, true);
+        upSoundsBroadcast = config.getBoolean(CONFIG_SOUND_UP_BROADCAST, false);
+        upSounds          = loadSoundList(CONFIG_SOUND_UP_ENTRIES);
+        downSoundsEnabled   = config.getBoolean(CONFIG_SOUND_DOWN_ENABLED, true);
+        downSoundsBroadcast = config.getBoolean(CONFIG_SOUND_DOWN_BROADCAST, false);
+        downSounds          = loadSoundList(CONFIG_SOUND_DOWN_ENTRIES);
 
-        downSoundEnabled = getConfig().getBoolean(CONFIG_SOUND_DOWN_ENABLED);
-        downSound = getSound(CONFIG_SOUND_DOWN_TYPE);
-        downVolume = (float)getConfig().getDouble(CONFIG_SOUND_DOWN_VOLUME);
-        downPitch = (float)getConfig().getDouble(CONFIG_SOUND_DOWN_PITCH);
+        /*===== コマンドサウンド =====*/
+        cmdUpSoundsEnabled   = config.getBoolean(CONFIG_SOUND_CMD_UP_ENABLED, true);
+        cmdUpSoundsBroadcast = config.getBoolean(CONFIG_SOUND_CMD_UP_BROADCAST, false);
+        cmdUpSounds          = loadSoundList(CONFIG_SOUND_CMD_UP_ENTRIES);
+        cmdDownSoundsEnabled   = config.getBoolean(CONFIG_SOUND_CMD_DOWN_ENABLED, true);
+        cmdDownSoundsBroadcast = config.getBoolean(CONFIG_SOUND_CMD_DOWN_BROADCAST, false);
+        cmdDownSounds          = loadSoundList(CONFIG_SOUND_CMD_DOWN_ENTRIES);
 
         /*===== BossBar =====*/
-        bossBarEnabled = getConfig().getBoolean(CONFIG_BOSSBAR_ENABLED);
+        bossBarEnabled = config.getBoolean(CONFIG_BOSSBAR_ENABLED);
         bossBarColor = parseEnumSafely(
                 org.bukkit.boss.BarColor.class,
-                getConfig().getString(CONFIG_BOSSBAR_COLOR),
+                config.getString(CONFIG_BOSSBAR_COLOR),
                 org.bukkit.boss.BarColor.BLUE
         );
         bossBarStyle = parseEnumSafely(
                 org.bukkit.boss.BarStyle.class,
-                getConfig().getString(CONFIG_BOSSBAR_STYLE),
+                config.getString(CONFIG_BOSSBAR_STYLE),
                 org.bukkit.boss.BarStyle.SOLID
         );
-        bossBarFormat = getConfig().getString(CONFIG_BOSSBAR_FORMAT);
-        bossBarUseYProgress = getConfig().getBoolean(CONFIG_BOSSBAR_USE_Y_PROGRESS);
+        bossBarFormat = config.getString(CONFIG_BOSSBAR_FORMAT);
+        bossBarUseYProgress = config.getBoolean(CONFIG_BOSSBAR_USE_Y_PROGRESS);
+
+        /*===== タイトル =====*/
+        titleUpEnabled  = config.getBoolean(CONFIG_TITLE_UP_ENABLED, false);
+        titleUpTitle    = config.getString(CONFIG_TITLE_UP_TITLE, "");
+        titleUpSubtitle = config.getString(CONFIG_TITLE_UP_SUBTITLE, "");
+        titleUpFadeIn   = config.getInt(CONFIG_TITLE_UP_FADE_IN, 10);
+        titleUpStay     = config.getInt(CONFIG_TITLE_UP_STAY, 40);
+        titleUpFadeOut  = config.getInt(CONFIG_TITLE_UP_FADE_OUT, 10);
+        titleDownEnabled  = config.getBoolean(CONFIG_TITLE_DOWN_ENABLED, false);
+        titleDownTitle    = config.getString(CONFIG_TITLE_DOWN_TITLE, "");
+        titleDownSubtitle = config.getString(CONFIG_TITLE_DOWN_SUBTITLE, "");
+        titleDownFadeIn   = config.getInt(CONFIG_TITLE_DOWN_FADE_IN, 10);
+        titleDownStay     = config.getInt(CONFIG_TITLE_DOWN_STAY, 40);
+        titleDownFadeOut  = config.getInt(CONFIG_TITLE_DOWN_FADE_OUT, 10);
+
+        titleCmdUpEnabled  = config.getBoolean(CONFIG_TITLE_CMD_UP_ENABLED, titleUpEnabled);
+        titleCmdUpTitle    = config.getString(CONFIG_TITLE_CMD_UP_TITLE, titleUpTitle);
+        titleCmdUpSubtitle = config.getString(CONFIG_TITLE_CMD_UP_SUBTITLE, titleUpSubtitle);
+        titleCmdUpFadeIn   = config.getInt(CONFIG_TITLE_CMD_UP_FADE_IN, titleUpFadeIn);
+        titleCmdUpStay     = config.getInt(CONFIG_TITLE_CMD_UP_STAY, titleUpStay);
+        titleCmdUpFadeOut  = config.getInt(CONFIG_TITLE_CMD_UP_FADE_OUT, titleUpFadeOut);
+        titleCmdDownEnabled  = config.getBoolean(CONFIG_TITLE_CMD_DOWN_ENABLED, titleDownEnabled);
+        titleCmdDownTitle    = config.getString(CONFIG_TITLE_CMD_DOWN_TITLE, titleDownTitle);
+        titleCmdDownSubtitle = config.getString(CONFIG_TITLE_CMD_DOWN_SUBTITLE, titleDownSubtitle);
+        titleCmdDownFadeIn   = config.getInt(CONFIG_TITLE_CMD_DOWN_FADE_IN, titleDownFadeIn);
+        titleCmdDownStay     = config.getInt(CONFIG_TITLE_CMD_DOWN_STAY, titleDownStay);
+        titleCmdDownFadeOut  = config.getInt(CONFIG_TITLE_CMD_DOWN_FADE_OUT, titleDownFadeOut);
+
+        /*===== アクションバー =====*/
+        actionBarUpEnabled  = config.getBoolean(CONFIG_ACTIONBAR_UP_ENABLED, false);
+        actionBarUpFormat   = config.getString(CONFIG_ACTIONBAR_UP_FORMAT, "");
+        actionBarDownEnabled  = config.getBoolean(CONFIG_ACTIONBAR_DOWN_ENABLED, false);
+        actionBarDownFormat   = config.getString(CONFIG_ACTIONBAR_DOWN_FORMAT, "");
+        actionBarCmdUpEnabled  = config.getBoolean(CONFIG_ACTIONBAR_CMD_UP_ENABLED, actionBarUpEnabled);
+        actionBarCmdUpFormat   = config.getString(CONFIG_ACTIONBAR_CMD_UP_FORMAT, actionBarUpFormat);
+        actionBarCmdDownEnabled  = config.getBoolean(CONFIG_ACTIONBAR_CMD_DOWN_ENABLED, actionBarDownEnabled);
+        actionBarCmdDownFormat   = config.getString(CONFIG_ACTIONBAR_CMD_DOWN_FORMAT, actionBarDownFormat);
+
+        /*===== メッセージ =====*/
+        messageLanguage = resolveLanguage(config.getString(CONFIG_MESSAGES_LANGUAGE));
     }
     /*===== マテリアルパーサ =====*/
     private Set<Material> loadMaterialSet(String path, String logName) {
+        FileConfiguration config = getUserConfig();
         Set<Material> set = new HashSet<>();
         Set<Material> excludeSet = new HashSet<>();
 
-        for (String name : getConfig().getStringList(path)) {
+        for (String name : config.getStringList(path)) {
             boolean isExclude = name.startsWith("!");
             String materialName = isExclude ? name.substring(1) : name;
 
@@ -443,24 +668,120 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
 
         if (targetY == null) return false;
 
-        playSound(player, loc, up);
         player.teleport(createTeleportLocation(loc, targetY));
-        updateBossBar(player, getBaseBlock(player.getLocation()));
+        playSound(player, up, false);
+        Block newBase = getBaseBlock(player.getLocation());
+        updateBossBar(player, newBase);
+
+        int currentFloor = floors.indexOf(targetY) + 1;
+        sendElevatorNotification(player, up, false, currentFloor, floors.size());
+
         return true;
     }
 
-    /* 方向に応じてサウンドを再生 */
-    private void playSound(Player player, Location loc, boolean up) {
-        if (up && upSoundEnabled && upSound != null) {
-            player.playSound(loc, upSound, upVolume, upPitch);
-        } else if (!up && downSoundEnabled && downSound != null) {
-            player.playSound(loc, downSound, downVolume, downPitch);
+    /* 方向と操作種別に応じてサウンドを再生（遅延・複数同時対応）*/
+    private void playSound(Player player, boolean up, boolean isCommand) {
+        boolean enabled = isCommand
+                ? (up ? cmdUpSoundsEnabled : cmdDownSoundsEnabled)
+                : (up ? upSoundsEnabled : downSoundsEnabled);
+
+        if (!enabled) return;
+
+        boolean broadcast = isCommand
+                ? (up ? cmdUpSoundsBroadcast : cmdDownSoundsBroadcast)
+                : (up ? upSoundsBroadcast : downSoundsBroadcast);
+
+        List<SoundEntry> entries = isCommand
+                ? (up ? cmdUpSounds : cmdDownSounds)
+                : (up ? upSounds : downSounds);
+
+        for (SoundEntry entry : entries) {
+            /* delay: 0 でもテレポート完了パケットの後に確実に届くよう最低1tick待つ */
+            long ticks = entry.delayMs() <= 0 ? 1L : Math.max(1L, entry.delayMs() / 50L);
+            Bukkit.getScheduler().runTaskLater(this, () -> {
+                if (player.isOnline()) {
+                    if (broadcast) {
+                        /* broadcast: true → ワールドで再生（周囲プレイヤーにも聞こえる）*/
+                        player.getWorld().playSound(
+                                player.getLocation(),
+                                entry.sound(), entry.volume(), entry.pitch());
+                    } else {
+                        /* broadcast: false → 移動したプレイヤーのみに再生 */
+                        player.playSound(player, entry.sound(), entry.volume(), entry.pitch());
+                    }
+                }
+            }, ticks);
+        }
+    }
+
+    /**
+     * ===============================
+     * タイトル / アクションバー通知
+     * ===============================
+     */
+    private void sendElevatorNotification(Player player, boolean up, boolean isCommand, int currentFloor, int totalFloors) {
+        boolean titleEnabled;
+        String titleTemplate;
+        String subtitleTemplate;
+        int fadeIn;
+        int stay;
+        int fadeOut;
+
+        if (isCommand) {
+            titleEnabled = up ? titleCmdUpEnabled : titleCmdDownEnabled;
+            titleTemplate = up ? titleCmdUpTitle : titleCmdDownTitle;
+            subtitleTemplate = up ? titleCmdUpSubtitle : titleCmdDownSubtitle;
+            fadeIn = up ? titleCmdUpFadeIn : titleCmdDownFadeIn;
+            stay = up ? titleCmdUpStay : titleCmdDownStay;
+            fadeOut = up ? titleCmdUpFadeOut : titleCmdDownFadeOut;
+        } else {
+            titleEnabled = up ? titleUpEnabled : titleDownEnabled;
+            titleTemplate = up ? titleUpTitle : titleDownTitle;
+            subtitleTemplate = up ? titleUpSubtitle : titleDownSubtitle;
+            fadeIn = up ? titleUpFadeIn : titleDownFadeIn;
+            stay = up ? titleUpStay : titleDownStay;
+            fadeOut = up ? titleUpFadeOut : titleDownFadeOut;
+        }
+
+        if (titleEnabled) {
+            String titleText = titleTemplate
+                    .replace("{current}", String.valueOf(currentFloor))
+                    .replace("{total}", String.valueOf(totalFloors));
+            String subtitleText = subtitleTemplate
+                    .replace("{current}", String.valueOf(currentFloor))
+                    .replace("{total}", String.valueOf(totalFloors));
+
+            player.showTitle(Title.title(
+                    LegacyComponentSerializer.legacySection().deserialize(titleText),
+                    LegacyComponentSerializer.legacySection().deserialize(subtitleText),
+                    Title.Times.times(
+                            Duration.ofMillis(fadeIn * 50L),
+                            Duration.ofMillis(stay * 50L),
+                            Duration.ofMillis(fadeOut * 50L)
+                    )
+            ));
+        }
+
+        boolean actionBarEnabled;
+        String actionBarTemplate;
+        if (isCommand) {
+            actionBarEnabled = up ? actionBarCmdUpEnabled : actionBarCmdDownEnabled;
+            actionBarTemplate = up ? actionBarCmdUpFormat : actionBarCmdDownFormat;
+        } else {
+            actionBarEnabled = up ? actionBarUpEnabled : actionBarDownEnabled;
+            actionBarTemplate = up ? actionBarUpFormat : actionBarDownFormat;
+        }
+
+        if (actionBarEnabled) {
+            String format = actionBarTemplate
+                    .replace("{current}", String.valueOf(currentFloor))
+                    .replace("{total}", String.valueOf(totalFloors));
+            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(format));
         }
     }
 
     /* テレポート先の座標を作成 */
-    private Location createTeleportLocation(Location loc, int targetY) {
-        return new Location(
+    private Location createTeleportLocation(Location loc, int targetY) {        return new Location(
                 loc.getWorld(),
                 loc.getBlockX() + 0.5,
                 targetY + 1,
@@ -526,6 +847,9 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
             return b;
         });
 
+        bar.setColor(bossBarColor);
+        bar.setStyle(bossBarStyle);
+
         String title = bossBarFormat
                 .replace("{current}", String.valueOf(current))
                 .replace("{total}", String.valueOf(total));
@@ -579,29 +903,119 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
         );
     }
 
-    /* サウンド取得 */
-    private Sound getSound(String path) {
-        String keyStr = getConfig().getString(path);
-        if (keyStr == null) return null;
+    /**
+     * コマンド入力 "{type,volume,pitch,delay}, ..." をパースして List<Map> に変換
+     * 形式例: {minecraft:entity.experience_orb.pickup,1.0,0.69,0}, {minecraft:block.note_block.pling,0.8,1.2,200}
+     */
+    private List<Map<String, Object>> parseSoundEntries(String raw) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        int pos = 0;
+        while (pos < raw.length()) {
+            int start = raw.indexOf('{', pos);
+            if (start == -1) break;
+            int end = raw.indexOf('}', start);
+            if (end == -1) throw new IllegalArgumentException(msg("parse-sound-unclosed-brace"));
 
-        try {
-            NamespacedKey key = NamespacedKey.fromString(keyStr);
-            return key != null ? Registry.SOUNDS.get(key) : null;
-        } catch (Exception e) {
-            getLogger().warning("Invalid sound key: " + keyStr);
-            return null;
+            String[] parts = raw.substring(start + 1, end).split(",", 4);
+            if (parts.length != 4) throw new IllegalArgumentException(msg("parse-sound-entry-format"));
+
+            String type    = parts[0].trim();
+            String volStr  = parts[1].trim();
+            String pitStr  = parts[2].trim();
+            String delStr  = parts[3].trim();
+
+            NamespacedKey key = NamespacedKey.fromString(type);
+            if (key == null || Registry.SOUNDS.get(key) == null) {
+                throw new IllegalArgumentException(msg("parse-sound-invalid-type", "type", type));
+            }
+
+            float volume, pitch;
+            long  delay;
+            try { volume = Float.parseFloat(volStr); }
+            catch (NumberFormatException e) { throw new IllegalArgumentException(msg("parse-sound-invalid-volume", "val", volStr)); }
+            try { pitch  = Float.parseFloat(pitStr); }
+            catch (NumberFormatException e) { throw new IllegalArgumentException(msg("parse-sound-invalid-pitch",  "val", pitStr)); }
+            try { delay  = Long.parseLong(delStr); }
+            catch (NumberFormatException e) { throw new IllegalArgumentException(msg("parse-sound-invalid-delay",  "val", delStr)); }
+            if (delay < 0) throw new IllegalArgumentException(msg("parse-sound-negative-delay"));
+
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("type",   type);
+            map.put("volume", volume);
+            map.put("pitch",  pitch);
+            map.put("delay",  delay);
+            result.add(map);
+            pos = end + 1;
         }
+        if (result.isEmpty()) throw new IllegalArgumentException(msg("parse-sound-entry-format"));
+        return result;
+    }
+
+    /* entries パスの値を {type,volume,pitch,delay}, ... 形式で表示 */
+    private String formatSoundEntriesDisplay(Object value) {
+        if (!(value instanceof List<?> list)) return String.valueOf(value);
+        StringBuilder sb = new StringBuilder();
+        for (Object item : list) {
+            if (!(item instanceof Map<?, ?> map)) continue;
+            if (!sb.isEmpty()) sb.append(", ");
+            Object t = map.get("type");
+            Object v = map.get("volume");
+            Object p = map.get("pitch");
+            Object d = map.get("delay");
+            sb.append("{")
+              .append(t != null ? t : "?").append(",")
+              .append(v != null ? v : "1.0").append(",")
+              .append(p != null ? p : "1.0").append(",")
+              .append(d != null ? d : "0")
+              .append("}");
+        }
+        return sb.isEmpty() ? "(empty)" : sb.toString();
+    }
+
+    /* サウンドエントリリスト読み込み（type / volume / pitch / delay ms）*/
+    private List<SoundEntry> loadSoundList(String path) {        FileConfiguration config = getUserConfig();
+        List<SoundEntry> entries = new ArrayList<>();
+        for (Map<?, ?> map : config.getMapList(path)) {
+            String typeStr = map.containsKey("type") ? String.valueOf(map.get("type")) : null;
+            if (typeStr == null) continue;
+            try {
+                NamespacedKey key = NamespacedKey.fromString(typeStr);
+                Sound sound = key != null ? Registry.SOUNDS.get(key) : null;
+                if (sound == null) {
+                    getLogger().warning("Invalid sound type at '" + path + "': " + typeStr);
+                    continue;
+                }
+                float volume    = map.containsKey("volume")    ? ((Number) map.get("volume")).floatValue()  : 1.0f;
+                float pitch     = map.containsKey("pitch")     ? ((Number) map.get("pitch")).floatValue()   : 1.0f;
+                long  delayMs   = map.containsKey("delay")     ? ((Number) map.get("delay")).longValue()    : 0L;
+                entries.add(new SoundEntry(sound, volume, pitch, delayMs));
+            } catch (Exception e) {
+                getLogger().warning("Invalid sound entry at '" + path + "': " + e.getMessage());
+            }
+        }
+        return entries;
     }
 
     /* Enum値を安全にパース（存在しない場合はデフォルト値を返す）*/
     private <T extends Enum<T>> T parseEnumSafely(Class<T> enumClass, String value, T defaultValue) {
         if (value == null) return defaultValue;
         try {
-            return Enum.valueOf(enumClass, value);
+            return Enum.valueOf(enumClass, value.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             getLogger().warning("Invalid enum value '" + value + "' for " + enumClass.getSimpleName());
             return defaultValue;
         }
+    }
+
+    /**
+     * ===============================
+     * ログイン処理
+     * ===============================
+     */
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        Bukkit.getScheduler().runTask(this, () -> checkElevator(player, player.getLocation(), true));
     }
 
     /**
@@ -615,6 +1029,7 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
         elevatorPlayers.remove(player.getUniqueId());
         lastEvaluatedBases.remove(player.getUniqueId());
         cooldowns.remove(player.getUniqueId());
+        pendingResets.remove(getSenderKey(player));
         removeBossBar(player);
     }
 
@@ -655,14 +1070,28 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
         floorCache.keySet().removeIf(key -> key.worldUid().equals(worldUid) && key.x() == x && key.z() == z);
     }
 
+    private void refreshOnlinePlayersElevatorState() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            checkElevator(player, player.getLocation(), true);
+        }
+    }
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
-        if (!command.getName().equalsIgnoreCase("simplecometelevator")) {
+        if (!command.getName().equalsIgnoreCase("simplecometelevator")
+                && !label.equalsIgnoreCase("sce")
+                && !label.equalsIgnoreCase("scelevator")) {
             return false;
         }
 
+        /* move コマンドは管理者権限不要（MOVE_PERMISSION で制御）*/
+        if (args.length >= 1 && args[0].equalsIgnoreCase("move")) {
+            handleMoveCommand(sender, args, label);
+            return true;
+        }
+
         if (!sender.hasPermission(ADMIN_PERMISSION)) {
-            sender.sendMessage("§cこのコマンドを実行する権限がありません。(" + ADMIN_PERMISSION + ")");
+            sendErrorMessage(sender, msg("no-permission", "permission", ADMIN_PERMISSION));
             return true;
         }
 
@@ -675,52 +1104,158 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
         switch (sub) {
             case "reload" -> {
                 if (args.length != 1) {
-                    sender.sendMessage("§c使い方: /" + label + " reload");
+                    sendErrorMessage(sender, msg("usage-reload", "label", label));
                     return true;
                 }
-                reloadConfig();
-                applyConfigRuntime();
-                sender.sendMessage("§aSimpleCometElevatorの設定をリロードしました。");
+                sendInfoMessage(sender, msg("configs-reloaded"));
+                Bukkit.getScheduler().runTask(this, () -> {
+                    Bukkit.getPluginManager().disablePlugin(this);
+                    Bukkit.getPluginManager().enablePlugin(this);
+                });
+            }
+            case "check" -> {
+                if (args.length != 1) {
+                    sendErrorMessage(sender, msg("usage-check", "label", label));
+                    return true;
+                }
+                if (updateChecker == null) {
+                    sendErrorMessage(sender, msg("update-checker-unavailable"));
+                    return true;
+                }
+                updateChecker.checkForUpdates();
+                sendInfoMessage(sender, msg("update-check-started"));
             }
             case "get" -> {
                 if (args.length != 2) {
-                    sender.sendMessage("§c使い方: /" + label + " get <path>");
+                    sendErrorMessage(sender, msg("usage-get", "label", label));
                     return true;
                 }
                 String path = args[1];
                 if (!EDITABLE_PATHS.contains(path)) {
-                    sender.sendMessage("§c未対応のpathです: " + path);
+                    sendErrorMessage(sender, msg("unsupported-path", "path", path));
                     return true;
                 }
-                Object value = getConfig().get(path);
-                sender.sendMessage("§e" + path + "§7 = §b" + value);
+                Object value = getUserConfig().get(path);
+                String displayValue = isEntriesPath(path)
+                        ? formatSoundEntriesDisplay(value)
+                        : String.valueOf(value);
+                sendInfoMessage(sender, msg("value-display", "path", path, "value", displayValue));
             }
             case "set" -> {
                 if (args.length < 3) {
-                    sender.sendMessage("§c使い方: /" + label + " set <path> <value>");
+                    sendErrorMessage(sender, msg("usage-set", "label", label));
                     return true;
                 }
 
                 String path = args[1];
                 if (!EDITABLE_PATHS.contains(path)) {
-                    sender.sendMessage("§c未対応のpathです: " + path);
+                    sendErrorMessage(sender, msg("unsupported-path", "path", path));
                     return true;
                 }
 
                 String rawValue = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-                Object oldValue = getConfig().get(path);
+                FileConfiguration config = getUserConfig();
+                Object oldValue = config.get(path);
 
                 try {
                     Object parsed = parseConfigValue(path, rawValue);
-                    getConfig().set(path, parsed);
-                    saveConfig();
+                    config.set(path, parsed);
+                    saveUserConfig();
                     applyConfigRuntime();
-                    sender.sendMessage("§a設定を更新しました: §e" + path + "§7 = §b" + parsed + " §7(旧: " + oldValue + ")");
+                    sendInfoMessage(sender, msg(
+                            "updated-value",
+                            "path", path,
+                            "new", String.valueOf(parsed),
+                            "old", String.valueOf(oldValue)
+                    ));
                 } catch (IllegalArgumentException e) {
-                    sender.sendMessage("§c" + e.getMessage());
+                    sendErrorMessage(sender, e.getMessage());
                 }
             }
-            case "help" -> sendCommandHelp(sender, label);
+            case "reset" -> {
+                if (args.length < 2 || args.length > 3) {
+                    sendErrorMessage(sender, msg("usage-reset", "label", label));
+                    return true;
+                }
+
+                String path = args[1];
+                boolean resetAll = path.equalsIgnoreCase(RESET_ALL_KEYWORD);
+                if (!resetAll && !EDITABLE_PATHS.contains(path)) {
+                    sendErrorMessage(sender, msg("unsupported-path", "path", path));
+                    return true;
+                }
+
+                if (!resetAll) {
+                    if (args.length != 2) {
+                        sendErrorMessage(sender, msg("usage-reset", "label", label));
+                        return true;
+                    }
+
+                    FileConfiguration config = getUserConfig();
+                    Object oldValue = config.get(path);
+                    config.set(path, null);
+                    saveUserConfig();
+                    applyConfigRuntime();
+
+                    Object newValue = getUserConfig().get(path);
+                    String oldDisplay = isEntriesPath(path)
+                            ? formatSoundEntriesDisplay(oldValue)
+                            : String.valueOf(oldValue);
+                    String newDisplay = isEntriesPath(path)
+                            ? formatSoundEntriesDisplay(newValue)
+                            : String.valueOf(newValue);
+
+                    sendInfoMessage(sender, msg(
+                            "reset-completed",
+                            "path", path,
+                            "old", oldDisplay,
+                            "new", newDisplay
+                    ));
+                    return true;
+                }
+
+                String senderKey = getSenderKey(sender);
+                long now = System.currentTimeMillis();
+
+                if (args.length == 2) {
+                    pendingResets.put(senderKey, new PendingReset(path, now + RESET_CONFIRM_TIMEOUT_MILLIS));
+                    long timeoutSec = RESET_CONFIRM_TIMEOUT_MILLIS / 1000L;
+                    sendInfoMessage(sender, msg(
+                            "reset-confirm-prompt",
+                            "path", RESET_ALL_KEYWORD,
+                            "label", label,
+                            "keyword", RESET_CONFIRM_KEYWORD,
+                            "seconds", String.valueOf(timeoutSec)
+                    ));
+                    return true;
+                }
+
+                if (!args[2].equalsIgnoreCase(RESET_CONFIRM_KEYWORD)) {
+                    sendErrorMessage(sender, msg("usage-reset", "label", label));
+                    return true;
+                }
+
+                PendingReset pending = pendingResets.get(senderKey);
+                if (pending == null) {
+                    sendErrorMessage(sender, msg("reset-no-pending", "label", label));
+                    return true;
+                }
+                if (pending.expiresAt() < now) {
+                    pendingResets.remove(senderKey);
+                    sendErrorMessage(sender, msg("reset-expired", "label", label));
+                    return true;
+                }
+                if (!pending.path().equals(path)) {
+                    sendErrorMessage(sender, msg("reset-path-mismatch", "pending", pending.path()));
+                    return true;
+                }
+
+                int resetCount = resetAllEditablePaths();
+                pendingResets.remove(senderKey);
+                applyConfigRuntime();
+                sendInfoMessage(sender, msg("reset-all-completed", "count", String.valueOf(resetCount)));
+            }
+            case "info" -> sendPluginInfo(sender);
             default -> sendCommandHelp(sender, label);
         }
 
@@ -729,7 +1264,39 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String @NotNull [] args) {
-        if (!command.getName().equalsIgnoreCase("simplecometelevator")) {
+        if (!command.getName().equalsIgnoreCase("simplecometelevator")
+                && !alias.equalsIgnoreCase("sce")
+                && !alias.equalsIgnoreCase("scelevator")) {
+            return Collections.emptyList();
+        }
+
+        /* 1引数目: 権限に応じてサブコマンド候補を組み立てる */
+        if (args.length == 1) {
+            List<String> available = new ArrayList<>();
+            if (moveCommandEnabled && sender instanceof Player p && p.hasPermission(MOVE_PERMISSION)) {
+                available.add("move");
+            }
+            if (sender.hasPermission(ADMIN_PERMISSION)) {
+                available.addAll(ADMIN_SUB_COMMANDS);
+            }
+            return filterByPrefix(available, args[0]);
+        }
+
+        /* move コマンドの階数タブ補完 */
+        if (args.length == 2 && args[0].equalsIgnoreCase("move")) {
+            if (moveCommandEnabled
+                    && sender instanceof Player player
+                    && player.hasPermission(MOVE_PERMISSION)
+                    && elevatorPlayers.contains(player.getUniqueId())) {
+                Location loc = player.getLocation();
+                Block base = getBaseBlock(loc);
+                List<Integer> floors = getFloors(loc.getWorld(), loc.getBlockX(), loc.getBlockZ(), base.getType());
+                List<String> floorNums = new ArrayList<>();
+                for (int i = 1; i <= floors.size(); i++) {
+                    floorNums.add(String.valueOf(i));
+                }
+                return filterByPrefix(floorNums, args[1]);
+            }
             return Collections.emptyList();
         }
 
@@ -737,30 +1304,44 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
             return Collections.emptyList();
         }
 
-        if (args.length == 1) {
-            return filterByPrefix(SUB_COMMANDS, args[0]);
-        }
 
         String sub = args[0].toLowerCase(Locale.ROOT);
 
-        if (args.length == 2 && (sub.equals("get") || sub.equals("set"))) {
-            return filterByPrefix(EDITABLE_PATHS, args[1]);
+        if (args.length == 2 && (sub.equals("get") || sub.equals("set") || sub.equals("reset"))) {
+            List<String> candidates = new ArrayList<>(EDITABLE_PATHS);
+            if (sub.equals("reset")) {
+                candidates.add(RESET_ALL_KEYWORD);
+            }
+            return filterByPrefix(candidates, args[1]);
+        }
+
+        if (args.length == 3 && sub.equals("reset") && args[1].equalsIgnoreCase(RESET_ALL_KEYWORD)) {
+            return filterByPrefix(List.of(RESET_CONFIRM_KEYWORD), args[2]);
         }
 
         if (args.length == 3 && sub.equals("set")) {
             String path = args[1];
+            if (isEntriesPath(path)) {
+                String hint = "{minecraft:entity.experience_orb.pickup,1.0,1.0,0}";
+                return args[2].isEmpty() ? List.of(hint) : Collections.emptyList();
+            }
             if (isBooleanPath(path)) {
                 return filterByPrefix(List.of("true", "false"), args[2]);
             }
-            if (path.equals(CONFIG_BOSSBAR_COLOR)) {
-                return filterByPrefix(Arrays.stream(org.bukkit.boss.BarColor.values())
-                        .map(Enum::name)
-                        .toList(), args[2]);
-            }
-            if (path.equals(CONFIG_BOSSBAR_STYLE)) {
-                return filterByPrefix(Arrays.stream(org.bukkit.boss.BarStyle.values())
-                        .map(Enum::name)
-                        .toList(), args[2]);
+            switch (path) {
+                case CONFIG_MESSAGES_LANGUAGE -> {
+                    return filterByPrefix(List.of("ja", "en"), args[2]);
+                }
+                case CONFIG_BOSSBAR_COLOR -> {
+                    return filterByPrefix(Arrays.stream(org.bukkit.boss.BarColor.values())
+                            .map(Enum::name)
+                            .toList(), args[2]);
+                }
+                case CONFIG_BOSSBAR_STYLE -> {
+                    return filterByPrefix(Arrays.stream(org.bukkit.boss.BarStyle.values())
+                            .map(Enum::name)
+                            .toList(), args[2]);
+                }
             }
         }
 
@@ -768,29 +1349,192 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
     }
 
     private void applyConfigRuntime() {
+        initializeUserSettings();
         loadConfigValues();
         floorCache.clear();
         lastEvaluatedBases.clear();
 
-        if (!bossBarEnabled) {
-            bossBars.values().forEach(org.bukkit.boss.BossBar::removeAll);
-            bossBars.clear();
-        }
+        bossBars.values().forEach(org.bukkit.boss.BossBar::removeAll);
+        bossBars.clear();
 
         if (!cooldownEnabled) {
             cooldowns.clear();
         }
 
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            checkElevator(player, player.getLocation(), true);
+        /*===== HisuiPluginUpdateChecker連携: リロード後の再読込・更新確認 =====*/
+        if (updateChecker != null) {
+            updateChecker.reload();
+            updateChecker.checkForUpdates();
         }
+        /*===============================================================*/
+
+        refreshOnlinePlayersElevatorState();
     }
 
     private void sendCommandHelp(CommandSender sender, String label) {
-        sender.sendMessage("§6=== SimpleCometElevator Admin ===");
-        sender.sendMessage("§e/" + label + " reload §7- 設定を再読み込み");
-        sender.sendMessage("§e/" + label + " get <path> §7- 現在値を表示");
-        sender.sendMessage("§e/" + label + " set <path> <value> §7- 設定値を変更して保存");
+        sendInfoMessage(sender, msg("admin-commands"));
+        sender.sendMessage(MESSAGE_PREFIX + msg("help-reload", "label", label));
+        sender.sendMessage(MESSAGE_PREFIX + msg("help-check", "label", label));
+        sender.sendMessage(MESSAGE_PREFIX + msg("help-get", "label", label));
+        sender.sendMessage(MESSAGE_PREFIX + msg("help-set", "label", label));
+        sender.sendMessage(MESSAGE_PREFIX + msg("help-reset", "label", label));
+        sender.sendMessage(MESSAGE_PREFIX + msg("help-info", "label", label));
+        if (moveCommandEnabled) {
+            sender.sendMessage(MESSAGE_PREFIX + msg("help-move", "label", label));
+        }
+
+        // 著者 → ウェブサイトリンク（右に Ko-fi リンクを配置）
+        List<String> authors = getPluginMeta().getAuthors();
+        String website = getPluginMeta().getWebsite();
+        String kofiUrl = updateChecker != null ? updateChecker.getKofiUrl() : null;
+        if (!authors.isEmpty() && website != null && !website.isBlank()) {
+            String authorText = String.join(", ", authors);
+            sender.sendMessage(buildHelpAuthorLine(authorText, website, kofiUrl));
+        }
+    }
+
+    private Component buildHelpAuthorLine(String authorText, String websiteUrl, String kofiUrl) {
+        Component prefix = LegacyComponentSerializer.legacySection()
+                .deserialize(MESSAGE_PREFIX + msg("help-author-label"));
+        Component link = Component.text(authorText, NamedTextColor.WHITE)
+                .clickEvent(ClickEvent.openUrl(websiteUrl))
+                .hoverEvent(HoverEvent.showText(
+                        Component.text(msg("info-link-hover") + "\n" + websiteUrl, NamedTextColor.GRAY)));
+        Component result = prefix.append(link);
+
+        if (kofiUrl != null && !kofiUrl.isBlank()) {
+            Component separator = LegacyComponentSerializer.legacySection().deserialize(" §7| ");
+            Component kofiLink = Component.text("Ko-fi", NamedTextColor.GOLD)
+                    .clickEvent(ClickEvent.openUrl(kofiUrl))
+                    .hoverEvent(HoverEvent.showText(
+                            Component.text(msg("info-link-hover") + "\n" + kofiUrl, NamedTextColor.GRAY)));
+            result = result.append(separator).append(kofiLink);
+        }
+
+        return result;
+    }
+
+    private String getSenderKey(CommandSender sender) {
+        if (sender instanceof Player player) {
+            return "player:" + player.getUniqueId();
+        }
+        return sender.getClass().getName() + ":" + sender.getName();
+    }
+
+    private int resetAllEditablePaths() {
+        FileConfiguration config = getUserConfig();
+        for (String editablePath : EDITABLE_PATHS) {
+            config.set(editablePath, null);
+        }
+        saveUserConfig();
+        return EDITABLE_PATHS.size();
+    }
+
+    /**
+     * ===============================
+     * /sce move <階数> コマンド処理
+     * ===============================
+     */
+    private void handleMoveCommand(CommandSender sender, String[] args, String label) {
+        if (!moveCommandEnabled) {
+            sendErrorMessage(sender, msg("move-disabled"));
+            return;
+        }
+
+        if (!(sender instanceof Player player)) {
+            sendErrorMessage(sender, msg("move-player-only"));
+            return;
+        }
+
+        if (!player.hasPermission(MOVE_PERMISSION)) {
+            sendErrorMessage(sender, msg("move-no-permission"));
+            return;
+        }
+
+        if (args.length != 2) {
+            sendErrorMessage(sender, msg("usage-move", "label", label));
+            return;
+        }
+
+        if (!elevatorPlayers.contains(player.getUniqueId())) {
+            sendErrorMessage(sender, msg("move-not-in-elevator"));
+            return;
+        }
+
+        int floorNum;
+        try {
+            floorNum = Integer.parseInt(args[1]);
+        } catch (NumberFormatException e) {
+            sendErrorMessage(sender, msg("move-floor-invalid"));
+            return;
+        }
+
+        Location loc = player.getLocation();
+        Block base = getBaseBlock(loc);
+        List<Integer> floors = getFloors(loc.getWorld(), loc.getBlockX(), loc.getBlockZ(), base.getType());
+
+        if (floorNum < 1 || floorNum > floors.size()) {
+            sendErrorMessage(sender, msg("move-floor-out-of-range", "total", String.valueOf(floors.size())));
+            return;
+        }
+
+        if (cooldownEnabled && isOnCooldown(player)) {
+            showCooldown(player);
+            return;
+        }
+
+        int currentFloor = floors.indexOf(base.getY()) + 1;
+        int targetY = floors.get(floorNum - 1);
+        boolean goingUp = floorNum >= currentFloor;
+
+        player.teleport(createTeleportLocation(loc, targetY));
+        playSound(player, goingUp, true);
+        updateBossBar(player, getBaseBlock(player.getLocation()));
+        sendElevatorNotification(player, goingUp, true, floorNum, floors.size());
+
+        if (cooldownEnabled) startCooldown(player);
+    }
+
+    private void sendInfoMessage(CommandSender sender, String message) {
+        sender.sendMessage(MESSAGE_PREFIX + message);
+    }
+
+    private void sendErrorMessage(CommandSender sender, String message) {
+        sender.sendMessage("§8[§bSimpleCometElevator§8] §c" + message);
+    }
+
+    private void sendPluginInfo(CommandSender sender) {
+        String version = getPluginMeta().getVersion();
+        List<String> authors = getPluginMeta().getAuthors();
+        String authorText = authors.isEmpty() ? null : String.join(", ", authors);
+
+        String primaryName = updateChecker != null ? updateChecker.getPrimarySourceDisplayName() : "GitHub";
+        String primaryUrl = updateChecker != null ? updateChecker.getPrimarySourceUrl() : null;
+        String secondaryName = updateChecker != null ? updateChecker.getSecondarySourceDisplayName() : "Modrinth";
+        String secondaryUrl = updateChecker != null ? updateChecker.getSecondarySourceUrl() : null;
+
+        sendInfoMessage(sender, msg("info-title"));
+        sendInfoMessage(sender, msg("info-version", "version", version));
+        sendInfoMessage(sender, msg("info-description"));
+        if (authorText != null) {
+            sendInfoMessage(sender, msg("info-author", "author", authorText));
+        }
+        if (primaryUrl != null && !primaryUrl.isBlank()) {
+            sender.sendMessage(buildInfoLinkLine(primaryName, primaryUrl));
+        }
+        if (secondaryUrl != null && !secondaryUrl.isBlank()) {
+            sender.sendMessage(buildInfoLinkLine(secondaryName, secondaryUrl));
+        }
+    }
+
+    private Component buildInfoLinkLine(String name, String url) {
+        Component prefix = LegacyComponentSerializer.legacySection()
+                .deserialize(MESSAGE_PREFIX + name + ": ");
+        Component link = Component.text(url, NamedTextColor.AQUA)
+                .clickEvent(ClickEvent.openUrl(url))
+                .hoverEvent(HoverEvent.showText(
+                        Component.text(msg("info-link-hover"), NamedTextColor.GRAY)));
+        return prefix.append(link);
     }
 
     private List<String> filterByPrefix(List<String> candidates, String prefix) {
@@ -800,32 +1544,86 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
                 .toList();
     }
 
+    private boolean isEntriesPath(String path) {
+        return path.equals(CONFIG_SOUND_UP_ENTRIES)
+                || path.equals(CONFIG_SOUND_DOWN_ENTRIES)
+                || path.equals(CONFIG_SOUND_CMD_UP_ENTRIES)
+                || path.equals(CONFIG_SOUND_CMD_DOWN_ENTRIES);
+    }
+
+    private boolean isTitleTimingPath(String path) {
+        return path.equals(CONFIG_TITLE_UP_FADE_IN)
+                || path.equals(CONFIG_TITLE_UP_STAY)
+                || path.equals(CONFIG_TITLE_UP_FADE_OUT)
+                || path.equals(CONFIG_TITLE_DOWN_FADE_IN)
+                || path.equals(CONFIG_TITLE_DOWN_STAY)
+                || path.equals(CONFIG_TITLE_DOWN_FADE_OUT)
+                || path.equals(CONFIG_TITLE_CMD_UP_FADE_IN)
+                || path.equals(CONFIG_TITLE_CMD_UP_STAY)
+                || path.equals(CONFIG_TITLE_CMD_UP_FADE_OUT)
+                || path.equals(CONFIG_TITLE_CMD_DOWN_FADE_IN)
+                || path.equals(CONFIG_TITLE_CMD_DOWN_STAY)
+                || path.equals(CONFIG_TITLE_CMD_DOWN_FADE_OUT);
+    }
+
     private boolean isBooleanPath(String path) {
         return path.equals(CONFIG_ALLOW_MIXED_BLOCKS)
                 || path.equals(CONFIG_COOLDOWN_ENABLED)
+                || path.equals(CONFIG_COMMAND_MOVE_ENABLED)
                 || path.equals(CONFIG_SOUND_UP_ENABLED)
                 || path.equals(CONFIG_SOUND_DOWN_ENABLED)
+                || path.equals(CONFIG_SOUND_CMD_UP_ENABLED)
+                || path.equals(CONFIG_SOUND_CMD_DOWN_ENABLED)
                 || path.equals(CONFIG_BOSSBAR_ENABLED)
-                || path.equals(CONFIG_BOSSBAR_USE_Y_PROGRESS);
+                || path.equals(CONFIG_BOSSBAR_USE_Y_PROGRESS)
+                || path.equals(CONFIG_TITLE_UP_ENABLED)
+                || path.equals(CONFIG_TITLE_DOWN_ENABLED)
+                || path.equals(CONFIG_TITLE_CMD_UP_ENABLED)
+                || path.equals(CONFIG_TITLE_CMD_DOWN_ENABLED)
+                || path.equals(CONFIG_ACTIONBAR_UP_ENABLED)
+                || path.equals(CONFIG_ACTIONBAR_DOWN_ENABLED)
+                || path.equals(CONFIG_ACTIONBAR_CMD_UP_ENABLED)
+                || path.equals(CONFIG_ACTIONBAR_CMD_DOWN_ENABLED);
     }
 
     private Object parseConfigValue(String path, String rawValue) {
-        if (path.equals(CONFIG_BASE_BLOCKS) || path.equals(CONFIG_PASSABLE_BLOCKS)) {
-            List<String> values = Arrays.stream(rawValue.split(","))
+        if (isEntriesPath(path)) {
+            return parseSoundEntries(rawValue);
+        }
+
+        if (path.equals(CONFIG_BASE_BLOCKS) || path.equals(CONFIG_PASSABLE_BLOCKS)) {            List<String> values = Arrays.stream(rawValue.split(","))
                     .map(String::trim)
                     .filter(value -> !value.isEmpty())
                     .toList();
             if (values.isEmpty()) {
-                throw new IllegalArgumentException("値が空です。カンマ区切りで1つ以上指定してください。");
+                throw new IllegalArgumentException(msg("parse-at-least-one-value"));
             }
             return values;
         }
 
+        if (path.equals(CONFIG_MESSAGES_LANGUAGE)) {
+            String normalized = rawValue.toLowerCase(Locale.ROOT);
+            if (!normalized.equals("ja") && !normalized.equals("en")) {
+                throw new IllegalArgumentException(msg("parse-language"));
+            }
+            return normalized;
+        }
+
         if (isBooleanPath(path)) {
             if (!rawValue.equalsIgnoreCase("true") && !rawValue.equalsIgnoreCase("false")) {
-                throw new IllegalArgumentException("boolean値を指定してください: true or false");
+                throw new IllegalArgumentException(msg("parse-boolean"));
             }
             return Boolean.parseBoolean(rawValue);
+        }
+
+        if (isTitleTimingPath(path)) {
+            try {
+                int value = Integer.parseInt(rawValue);
+                if (value < 0) throw new IllegalArgumentException(msg("parse-title-timing-min"));
+                return value;
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(msg("parse-integer"));
+            }
         }
 
         switch (path) {
@@ -833,19 +1631,18 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
                 try {
                     int value = Integer.parseInt(rawValue);
                     if (value < 1) {
-                        throw new IllegalArgumentException("required-airは1以上を指定してください。");
+                        throw new IllegalArgumentException(msg("parse-required-air-min"));
                     }
                     return value;
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("整数値を指定してください。");
+                    throw new IllegalArgumentException(msg("parse-integer"));
                 }
             }
-            case CONFIG_TOLERANCE_HEIGHT, CONFIG_COOLDOWN_SECONDS, CONFIG_SOUND_UP_VOLUME, CONFIG_SOUND_UP_PITCH,
-                 CONFIG_SOUND_DOWN_VOLUME, CONFIG_SOUND_DOWN_PITCH -> {
+            case CONFIG_TOLERANCE_HEIGHT, CONFIG_COOLDOWN_SECONDS -> {
                 try {
                     return Double.parseDouble(rawValue);
                 } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("小数値を指定してください。");
+                    throw new IllegalArgumentException(msg("parse-decimal"));
                 }
             }
             case CONFIG_BOSSBAR_COLOR -> {
@@ -854,7 +1651,7 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
                     org.bukkit.boss.BarColor.valueOf(normalized);
                     return normalized;
                 } catch (IllegalArgumentException e) {
-                    throw new IllegalArgumentException("BossBar colorが不正です。例: BLUE, GREEN, RED");
+                    throw new IllegalArgumentException(msg("parse-bossbar-color"));
                 }
             }
             case CONFIG_BOSSBAR_STYLE -> {
@@ -863,11 +1660,138 @@ public final class SimpleCometElevator extends JavaPlugin implements Listener {
                     org.bukkit.boss.BarStyle.valueOf(normalized);
                     return normalized;
                 } catch (IllegalArgumentException e) {
-                    throw new IllegalArgumentException("BossBar styleが不正です。例: SOLID, SEGMENTED_10");
+                    throw new IllegalArgumentException(msg("parse-bossbar-style"));
                 }
             }
         }
 
         return rawValue;
+    }
+
+    private String resolveLanguage(@Nullable String value) {
+        if (value == null) return "ja";
+        String normalized = value.toLowerCase(Locale.ROOT);
+        return normalized.equals("ja") || normalized.equals("en") ? normalized : "ja";
+    }
+
+    private String msg(String key, String... replacements) {
+        String language = messageLanguage != null ? messageLanguage : "ja";
+        String text = getMessageByLanguage(language, key);
+
+        if (text == null) {
+            text = getMessageByLanguage("en", key);
+        }
+        if (text == null) {
+            text = getMessageByLanguage("ja", key);
+        }
+        if (text == null) {
+            text = key;
+        }
+
+        for (int i = 0; i + 1 < replacements.length; i += 2) {
+            text = text.replace("{" + replacements[i] + "}", replacements[i + 1]);
+        }
+        return text;
+    }
+
+    private void initializeUserSettings() {
+        settingsFolder = new File(getDataFolder(), SETTINGS_DIR_NAME);
+        if (!settingsFolder.exists() && !settingsFolder.mkdirs()) {
+            getLogger().warning("Could not create settings folder: " + settingsFolder.getPath());
+        }
+
+        ensureSettingsFileExists(CONFIG_FILE_NAME);
+        ensureSettingsFileExists(MESSAGES_JA_FILE_NAME);
+        ensureSettingsFileExists(MESSAGES_EN_FILE_NAME);
+        syncSettingsWithDefaults();
+
+        configFile = new File(settingsFolder, CONFIG_FILE_NAME);
+        userConfig = YamlConfiguration.loadConfiguration(configFile);
+        loadMessageConfigs();
+    }
+
+    private void syncSettingsWithDefaults() {
+        mergeMissingKeysFromDefaults(CONFIG_FILE_NAME);
+        mergeMissingKeysFromDefaults(MESSAGES_JA_FILE_NAME);
+        mergeMissingKeysFromDefaults(MESSAGES_EN_FILE_NAME);
+    }
+
+    private void mergeMissingKeysFromDefaults(String resourceFileName) {
+        File targetFile = new File(settingsFolder, resourceFileName);
+        if (!targetFile.exists()) {
+            return;
+        }
+
+        YamlConfiguration current = YamlConfiguration.loadConfiguration(targetFile);
+        String before = current.saveToString();
+
+        try (InputStream inputStream = getResource(resourceFileName)) {
+            if (inputStream == null) {
+                return;
+            }
+
+            YamlConfiguration defaults = YamlConfiguration.loadConfiguration(
+                    new InputStreamReader(inputStream, StandardCharsets.UTF_8)
+            );
+            current.setDefaults(defaults);
+            current.options().copyDefaults(true);
+
+            if (!before.equals(current.saveToString())) {
+                current.save(targetFile);
+                getLogger().info("Added missing settings entries to: " + targetFile.getPath());
+            }
+        } catch (IOException e) {
+            getLogger().warning("Failed to merge missing settings entries: " + targetFile.getPath() + " (" + e.getMessage() + ")");
+        }
+    }
+
+    private void ensureSettingsFileExists(String resourceFileName) {
+        File targetFile = new File(settingsFolder, resourceFileName);
+        if (targetFile.exists()) {
+            return;
+        }
+
+        try (InputStream inputStream = getResource(resourceFileName)) {
+            if (inputStream != null) {
+                Files.copy(inputStream, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                getLogger().info("Generated missing settings file: " + targetFile.getPath());
+                return;
+            }
+
+            if (targetFile.createNewFile()) {
+                getLogger().warning("Default resource not found. Generated empty file: " + targetFile.getPath());
+            }
+        } catch (IOException e) {
+            getLogger().warning("Failed to generate settings file: " + targetFile.getPath() + " (" + e.getMessage() + ")");
+        }
+    }
+
+    private FileConfiguration getUserConfig() {
+        if (userConfig == null) {
+            userConfig = new YamlConfiguration();
+        }
+        return userConfig;
+    }
+
+    private void saveUserConfig() {
+        try {
+            getUserConfig().save(configFile);
+        } catch (IOException e) {
+            getLogger().warning("Failed to save settings file: " + configFile.getPath() + " (" + e.getMessage() + ")");
+        }
+    }
+
+    private void loadMessageConfigs() {
+        jaMessages = YamlConfiguration.loadConfiguration(new File(settingsFolder, MESSAGES_JA_FILE_NAME));
+        enMessages = YamlConfiguration.loadConfiguration(new File(settingsFolder, MESSAGES_EN_FILE_NAME));
+    }
+
+    private @Nullable String getMessageByLanguage(String language, String key) {
+        FileConfiguration config = switch (language) {
+            case "ja" -> jaMessages;
+            case "en" -> enMessages;
+            default -> null;
+        };
+        return config != null ? config.getString(key) : null;
     }
 }
