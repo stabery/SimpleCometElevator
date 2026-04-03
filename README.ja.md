@@ -17,7 +17,11 @@ SimpleCometElevator - Minecraft(Paper)用プラグイン
   - [エレベーターフロア設定](#エレベーターフロア設定-elevatorfloor)
   - [クールダウン設定](#クールダウン設定-elevatorcooldown)
   - [サウンド設定](#サウンド設定-elevatorsound)
+  - [コマンドサウンド設定](#コマンドサウンド設定-elevatorsoundcommand)
   - [フロアバー設定](#フロアバー設定-elevatorfloorbar)
+  - [タイトル設定](#タイトル設定-elevatortitle)
+  - [アクションバー設定](#アクションバー設定-elevatoractionbar)
+  - [メッセージ設定](#メッセージ設定-messages)
 - [特殊記法](#特殊記法)
 - [設定例](#設定例)
 - [Tips集](#tips集)
@@ -81,7 +85,7 @@ SimpleCometElevator - Minecraft(Paper)用プラグイン
 
 # 設定ファイル
 
-`plugins/SimpleCometElevator/config.yml`
+`plugins/SimpleCometElevator/user-settings/config.yml`
 
 ## 管理コマンド
 
@@ -89,16 +93,35 @@ SimpleCometElevator - Minecraft(Paper)用プラグイン
 
 - `/simplecometelevator reload` (`/scelevator reload`)
   - `config.yml` を再読み込みし、現在の動作に即時反映します。
+- `/simplecometelevator help` (`/scelevator help`)
+  - 管理コマンドのヘルプを表示します。
 - `/simplecometelevator get <path>`
   - 現在の設定値を表示します。
 - `/simplecometelevator set <path> <value>`
   - 設定値を更新して保存し、即時反映します。
+- `/simplecometelevator reset <path>`
+  - 指定した設定値をデフォルト値へ戻して即時反映します。
+- `/simplecometelevator reset all` -> `/simplecometelevator reset all confirm`
+  - 編集可能な全pathを一括でデフォルト値に戻します（30秒以内のconfirmが必要）。
+- `/simplecometelevator info` (`/scelevator info`)
+  - プラグインのバージョン・作者・リポジトリリンクを表示します。
+
+## 移動コマンド
+
+移動権限（`simplecometelevator.move`）を持つプレイヤーは、エレベーターの特定の階に直接テレポートできます。
+
+- `/simplecometelevator move <階数>` (`/scelevator move <階数>`)
+  - エレベーターに乗っている間、指定した階数へテレポートします。
+  - Tab補完で利用可能な階数が表示されます。
 
 **例**:
 ```mcfunction
 /scelevator set elevator.cooldown.enabled true
 /scelevator set elevator.cooldown.seconds 1.5
 /scelevator set elevator.floor.base-blocks IRON_BLOCK,GOLD_BLOCK,$WOOLS
+/scelevator set elevator.sound.up.entries {minecraft:entity.experience_orb.pickup,1.0,0.69,0}
+/scelevator set elevator.sound.up.entries {minecraft:block.note_block.pling,1.0,1.2,0}, {minecraft:entity.experience_orb.pickup,0.5,1.5,200}
+/scelevator move 3
 /scelevator reload
 ```
 
@@ -118,15 +141,58 @@ SimpleCometElevator - Minecraft(Paper)用プラグイン
 - `elevator.cooldown.seconds`（クールダウン秒数）
 - `elevator.cooldown.format`（表示フォーマット）
 
+#### command
+- `elevator.command.move.enabled`（`/scelevator move` の有効化）
+
 #### sound.up / sound.down
 - `elevator.sound.up.enabled`（上昇音の有効化）
-- `elevator.sound.up.type`（上昇音のサウンドID）
-- `elevator.sound.up.volume`（上昇音の音量）
-- `elevator.sound.up.pitch`（上昇音のピッチ）
+- `elevator.sound.up.entries`（上昇音エントリリスト）
 - `elevator.sound.down.enabled`（下降音の有効化）
-- `elevator.sound.down.type`（下降音のサウンドID）
-- `elevator.sound.down.volume`（下降音の音量）
-- `elevator.sound.down.pitch`（下降音のピッチ）
+- `elevator.sound.down.entries`（下降音エントリリスト）
+- `elevator.sound.command.up.enabled`（moveコマンド上昇音の有効化）
+- `elevator.sound.command.up.entries`（moveコマンド上昇音エントリリスト）
+- `elevator.sound.command.down.enabled`（moveコマンド下降音の有効化）
+- `elevator.sound.command.down.entries`（moveコマンド下降音エントリリスト）
+
+#### entries パスのコマンド書式
+
+`entries` パスには `{サウンドID,volume,pitch,delayMs}` の形式でエントリを指定します。  
+カンマ + スペース区切りで複数エントリを並べると、**複数のサウンドを同時または時間差で再生**できます。
+
+```
+/scelevator set <path> {type,volume,pitch,delay} [, {type,volume,pitch,delay} ...]
+```
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| `type` | 文字列 | MinecraftのサウンドID（例: `minecraft:entity.experience_orb.pickup`） |
+| `volume` | 小数 | 音量（例: `1.0`） |
+| `pitch` | 小数 | ピッチ（例: `0.69`） |
+| `delay` | 整数 | 再生遅延（ミリ秒、`0` で即時） |
+
+**コマンド使用例**:
+```mcfunction
+# 上昇音を1エントリに設定
+/scelevator set elevator.sound.up.entries {minecraft:entity.experience_orb.pickup,1.0,0.69,0}
+
+# 上昇音を2エントリに設定（同時再生）
+/scelevator set elevator.sound.up.entries {minecraft:block.note_block.pling,1.0,1.2,0}, {minecraft:ui.button.click,0.8,1.0,0}
+
+# 上昇音を2エントリに設定（200ms後に逐次再生）
+/scelevator set elevator.sound.up.entries {minecraft:block.note_block.pling,1.0,1.2,0}, {minecraft:entity.experience_orb.pickup,0.5,1.5,200}
+
+# 下降音を設定
+/scelevator set elevator.sound.down.entries {minecraft:entity.experience_orb.pickup,1.0,0.56,0}
+
+# コマンド移動音（上）を設定
+/scelevator set elevator.sound.command.up.entries {minecraft:ui.button.click,1.0,1.0,0}
+
+# 現在の上昇音エントリを確認
+/scelevator get elevator.sound.up.entries
+```
+
+> **Tip**: `delay` の値が異なるエントリを並べると逐次再生に、同じ値（または両方 `0`）にすると同時再生になります。  
+> サウンドIDの一覧は [Minecraft Wiki](https://minecraft.wiki/w/Sounds.json) で確認できます。
 
 #### floorbar
 - `elevator.floorbar.enabled`（BossBar表示の有効化）
@@ -134,6 +200,45 @@ SimpleCometElevator - Minecraft(Paper)用プラグイン
 - `elevator.floorbar.style`（BossBarスタイル）
 - `elevator.floorbar.format`（タイトルフォーマット）
 - `elevator.floorbar.use-y-progress`（Y座標基準の進捗）
+
+#### title
+- `elevator.title.up.enabled`
+- `elevator.title.up.title`
+- `elevator.title.up.subtitle`
+- `elevator.title.up.fade-in`
+- `elevator.title.up.stay`
+- `elevator.title.up.fade-out`
+- `elevator.title.down.enabled`
+- `elevator.title.down.title`
+- `elevator.title.down.subtitle`
+- `elevator.title.down.fade-in`
+- `elevator.title.down.stay`
+- `elevator.title.down.fade-out`
+- `elevator.title.command.up.enabled`
+- `elevator.title.command.up.title`
+- `elevator.title.command.up.subtitle`
+- `elevator.title.command.up.fade-in`
+- `elevator.title.command.up.stay`
+- `elevator.title.command.up.fade-out`
+- `elevator.title.command.down.enabled`
+- `elevator.title.command.down.title`
+- `elevator.title.command.down.subtitle`
+- `elevator.title.command.down.fade-in`
+- `elevator.title.command.down.stay`
+- `elevator.title.command.down.fade-out`
+
+#### actionbar
+- `elevator.actionbar.up.enabled`
+- `elevator.actionbar.up.format`
+- `elevator.actionbar.down.enabled`
+- `elevator.actionbar.down.format`
+- `elevator.actionbar.command.up.enabled`
+- `elevator.actionbar.command.up.format`
+- `elevator.actionbar.command.down.enabled`
+- `elevator.actionbar.command.down.format`
+
+#### messages
+- `messages.language`（メッセージ言語）
 
 詳細な型・デフォルト値・使用例は、この後の各設定セクションを参照してください。
 
@@ -230,6 +335,8 @@ SimpleCometElevator - Minecraft(Paper)用プラグイン
 
 ## サウンド設定 (elevator.sound)
 
+サウンド設定は **entriesリスト形式** を使用します。上昇・下降それぞれに複数のサウンドエントリを設定でき、同時または遅延させて再生できます。
+
 ### 上昇音設定 (up)
 
 #### enabled
@@ -240,37 +347,41 @@ SimpleCometElevator - Minecraft(Paper)用プラグイン
   ```yaml
   enabled: true
   ```
->**Tips**: 無効にすると、エレベーターで上昇した時の音が再生されなくなります。
 
-#### type
-- **型**: 文字列
-- **デフォルト**: `"minecraft:entity.experience_orb.pickup"`
-- **説明**: 上昇時に再生するサウンドの種類を指定します。MinecraftのサウンドIDを使用します。
+#### broadcast
+- **型**: ブール値
+- **デフォルト**: `false`
+- **説明**: `true` でワールド再生（周囲プレイヤーにも聞こえる）、`false` で移動したプレイヤーのみに再生します。
+- **補足**: `broadcast` は `/scelevator set` 対象外のため、`config.yml` を直接編集してください。
+
+#### entries
+- **型**: サウンドエントリのリスト
+- **説明**: 各エントリには以下のフィールドがあります。
+  - `type` — MinecraftのサウンドID（例: `"minecraft:entity.experience_orb.pickup"`）
+  - `volume` — 音量（デフォルト: `1.0`）
+  - `pitch` — ピッチ（デフォルト: `1.0`）
+  - `delay` — 再生までの遅延（ミリ秒、デフォルト: `0`）
 - **使用例**:
   ```yaml
-  type: "minecraft:block.note_block.pling"
+  entries:
+    - type: "minecraft:entity.experience_orb.pickup"
+      volume: 1.0
+      pitch: 0.69
+      delay: 0
   ```
->**Tips**: サウンドIDは「minecraft:」から始まります。Tab補完が効かないので正確に入力してください。
 
-#### volume
-- **型**: 小数
-- **デフォルト**: `1.0`
-- **説明**: 上昇音のボリュームを指定します。1.0が通常の音量です。
-- **使用例**:
-  ```yaml
-  volume: 0.8  # 80%の音量
-  ```
->**Tips**: 0.0で無音、1.0で最大音量になります。それ以上に設定すると音量は上がらず聞こえる距離が伸びます。
-
-#### pitch
-- **型**: 小数
-- **デフォルト**: `0.69`
-- **説明**: 上昇音のピッチ（音の高さ）を指定します。1.0が通常のピッチです。
-- **使用例**:
-  ```yaml
-  pitch: 1.2  # 高めの音
-  ```
->**Tips**: 0.5で低音、2.0で高音になります。上昇音を高めに設定すると、方向がわかりやすくなります。
+>**Tips**: 複数のエントリを追加することで、複数のサウンドを同時または時間差で再生できます。
+> ```yaml
+> entries:
+>   - type: "minecraft:block.note_block.pling"
+>     volume: 1.0
+>     pitch: 1.2
+>     delay: 0
+>   - type: "minecraft:entity.experience_orb.pickup"
+>     volume: 0.5
+>     pitch: 1.5
+>     delay: 200
+> ```
 
 ### 下降音設定 (down)
 
@@ -282,37 +393,56 @@ SimpleCometElevator - Minecraft(Paper)用プラグイン
   ```yaml
   enabled: true
   ```
->**Tips**: 上昇音と個別に設定できます。
 
-#### type
-- **型**: 文字列
-- **デフォルト**: `"minecraft:entity.experience_orb.pickup"`
-- **説明**: 下降時に再生するサウンドの種類を指定します。
+#### entries
 - **使用例**:
   ```yaml
-  type: "minecraft:block.note_block.bass"
+  entries:
+    - type: "minecraft:entity.experience_orb.pickup"
+      volume: 1.0
+      pitch: 0.56
+      delay: 0
   ```
->**Tips**: 上昇音とは異なるサウンドを設定しても、方向がわかりやすくなります。
 
-#### volume
-- **型**: 小数
-- **デフォルト**: `1.0`
-- **説明**: 下降音のボリュームを指定します。
+>**Tips**: 上昇音とは異なるピッチや音を設定すると、移動方向がわかりやすくなります。
+
+## コマンドサウンド設定 (elevator.sound.command)
+
+`/scelevator move <階数>` コマンド使用時に再生されるサウンドです。  
+上昇・下降のサウンドとは独立して設定できます。構造は通常のサウンド設定と同じです。
+
+#### enabled
+- **型**: ブール値
+- **デフォルト**: `true`
+- **説明**: コマンドによる移動時のサウンドを有効にするかどうかを指定します。
+
+#### broadcast
+- **型**: ブール値
+- **デフォルト**: `false`
+- **説明**: `true` でワールド再生、`false` で移動プレイヤーのみに再生します。
+- **補足**: `broadcast` は `/scelevator set` では変更できません。
+
+#### entries
+- **説明**: 通常のサウンドと同じ形式（`type` / `volume` / `pitch` / `delay`）
+
 - **使用例**:
   ```yaml
-  volume: 0.8
+  command:
+    up:
+      enabled: true
+      entries:
+        - type: "minecraft:entity.experience_orb.pickup"
+          volume: 1.0
+          pitch: 0.69
+          delay: 0
+    down:
+      enabled: true
+      entries:
+        - type: "minecraft:entity.experience_orb.pickup"
+          volume: 1.0
+          pitch: 0.56
+          delay: 0
   ```
->**Tips**: 上昇音と同じ音量にするのがおすすめです。
-
-#### pitch
-- **型**: 小数
-- **デフォルト**: `0.56`
-- **説明**: 下降音のピッチを指定します。
-- **使用例**:
-  ```yaml
-  pitch: 0.8  # 低めの音
-  ```
->**Tips**: 下降音を低めに設定すると、方向がわかりやすくなります。
 
 ## フロアバー設定 (elevator.floorbar)
 
@@ -360,6 +490,64 @@ SimpleCometElevator - Minecraft(Paper)用プラグイン
 - **型**: ブール値
 - **デフォルト**: `false`
 - **説明**: 有効にするとBossBarの進捗が階数基準ではなく、フロアのy座標基準になります。
+
+## タイトル設定 (elevator.title)
+
+上昇/下降時と、`/scelevator move` 使用時にタイトル通知を表示できます。
+
+### `up` / `down`
+- `enabled`（有効化）
+- `title`（タイトル文字列）
+- `subtitle`（サブタイトル文字列）
+- `fade-in` / `stay` / `fade-out`（tick単位）
+
+### `command.up` / `command.down`
+- 基本構造は `up` / `down` と同じです。
+- 未設定時は通常移動側の値を引き継ぎます。
+
+**使用例**:
+```yaml
+title:
+  up:
+    enabled: true
+    title: "§e↑UP↑"
+    subtitle: "§7{current}F / {total}F"
+    fade-in: 10
+    stay: 40
+    fade-out: 10
+```
+
+## アクションバー設定 (elevator.actionbar)
+
+移動時に画面下部へ短文通知を表示します。
+
+### `up` / `down` / `command.up` / `command.down`
+- `enabled`（有効化）
+- `format`（`{current}` と `{total}` を使用可能）
+
+**使用例**:
+```yaml
+actionbar:
+  up:
+    enabled: true
+    format: "§e↑ {current}F / {total}F"
+```
+
+---
+
+## メッセージ設定 (messages)
+
+#### language
+- **型**: 文字列
+- **デフォルト**: `"ja"`
+- **利用可能**: `ja`（日本語）、`en`（英語）
+- **説明**: ゲーム内コマンドのメッセージに使用する言語を指定します。
+- **使用例**:
+  ```yaml
+  messages:
+    language: en
+  ```
+>**Tips**: メッセージのテキスト自体は `user-settings` フォルダ内の `messages_ja.yml` または `messages_en.yml` を直接編集することでカスタマイズできます。
 
 ---
 
@@ -456,20 +644,27 @@ elevator:
   sound:
     up:
       enabled: true
-      type: "minecraft:entity.IRON_GOLEM_ATTACK"
-      volume: 1.0
-      pitch: 1.0
+      entries:
+        - type: "minecraft:entity.experience_orb.pickup"
+          volume: 1.0
+          pitch: 0.69
+          delay: 0
     down:
       enabled: true
-      type: "minecraft:entity.IRON_GOLEM_ATTACK"
-      volume: 1.0
-      pitch: 1.0
+      entries:
+        - type: "minecraft:entity.experience_orb.pickup"
+          volume: 1.0
+          pitch: 0.56
+          delay: 0
 
   floorbar:
     enabled: true
     color: BLUE
     style: SOLID
     format: "§e{current}F / {total}F"
+
+messages:
+  language: ja
 ```
 
 ### 日本語表示の設定
@@ -480,6 +675,9 @@ elevator:
 
   floorbar:
     format: "§a{current}階 / {total}階"
+
+messages:
+  language: ja
 ```
 
 ### タグを活用した設定
@@ -526,7 +724,7 @@ elevator:
 ----
 ## その他
 
-プラグインバージョン: 1.0.0
+プラグインバージョン: 1.1.0-1.21.x
 作成者: [Hisui.A](https://github.com/stabery)
 GitHubリポジトリ: https://github.com/stabery/SimpleCometElevator
 

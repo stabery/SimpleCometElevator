@@ -15,7 +15,11 @@ It is a lightweight, minimal elevator plugin focused on simple setup and use.
   - [Elevator Floor Settings (`elevator.floor`)](#elevator-floor-settings-elevatorfloor)
   - [Cooldown Settings (`elevator.cooldown`)](#cooldown-settings-elevatorcooldown)
   - [Sound Settings (`elevator.sound`)](#sound-settings-elevatorsound)
+  - [Command Sound Settings (`elevator.sound.command`)](#command-sound-settings-elevatorsoundcommand)
   - [Floor Bar Settings (`elevator.floorbar`)](#floor-bar-settings-elevatorfloorbar)
+  - [Title Settings (`elevator.title`)](#title-settings-elevatortitle)
+  - [ActionBar Settings (`elevator.actionbar`)](#actionbar-settings-elevatoractionbar)
+  - [Messages Settings (`messages`)](#messages-settings-messages)
 - [Special Notation](#special-notation)
 - [Configuration Examples](#configuration-examples)
 - [Tips](#tips)
@@ -80,7 +84,7 @@ Place the same floor blocks vertically with enough space between them.
 
 ## Configuration File
 
-`plugins/SimpleCometElevator/config.yml`
+`plugins/SimpleCometElevator/user-settings/config.yml`
 
 ### Admin Commands
 
@@ -88,10 +92,26 @@ Players with admin permission (`simplecometelevator.admin`) can manage settings 
 
 - `/simplecometelevator reload` (`/scelevator reload`)
   - Reloads `config.yml` and applies changes immediately.
+- `/simplecometelevator help` (`/scelevator help`)
+  - Shows the admin command help.
 - `/simplecometelevator get <path>`
   - Displays the current value for a config path.
 - `/simplecometelevator set <path> <value>`
   - Updates and saves the value, then applies it immediately.
+- `/simplecometelevator reset <path>`
+  - Resets a specific path to its default value and applies it immediately.
+- `/simplecometelevator reset all` -> `/simplecometelevator reset all confirm`
+  - Resets all editable paths (requires confirm within 30 seconds).
+- `/simplecometelevator info` (`/scelevator info`)
+  - Shows plugin version, author, and repository links.
+
+### Move Command
+
+Players with move permission (`simplecometelevator.move`) can teleport to a specific floor directly.
+
+- `/simplecometelevator move <floor>` (`/scelevator move <floor>`)
+  - Teleports to the specified floor number while standing on an elevator.
+  - Tab completion shows available floor numbers.
 
 **Examples**:
 
@@ -99,6 +119,9 @@ Players with admin permission (`simplecometelevator.admin`) can manage settings 
 /scelevator set elevator.cooldown.enabled true
 /scelevator set elevator.cooldown.seconds 1.5
 /scelevator set elevator.floor.base-blocks IRON_BLOCK,GOLD_BLOCK,$WOOLS
+/scelevator set elevator.sound.up.entries {minecraft:entity.experience_orb.pickup,1.0,0.69,0}
+/scelevator set elevator.sound.up.entries {minecraft:block.note_block.pling,1.0,1.2,0}, {minecraft:entity.experience_orb.pickup,0.5,1.5,200}
+/scelevator move 3
 /scelevator reload
 ```
 
@@ -116,15 +139,58 @@ Players with admin permission (`simplecometelevator.admin`) can manage settings 
 - `elevator.cooldown.seconds`
 - `elevator.cooldown.format`
 
+#### command
+- `elevator.command.move.enabled`
+
 #### sound.up / sound.down
 - `elevator.sound.up.enabled`
-- `elevator.sound.up.type`
-- `elevator.sound.up.volume`
-- `elevator.sound.up.pitch`
+- `elevator.sound.up.entries` (sound entries list)
 - `elevator.sound.down.enabled`
-- `elevator.sound.down.type`
-- `elevator.sound.down.volume`
-- `elevator.sound.down.pitch`
+- `elevator.sound.down.entries` (sound entries list)
+- `elevator.sound.command.up.enabled`
+- `elevator.sound.command.up.entries` (entries for `/scelevator move` going up)
+- `elevator.sound.command.down.enabled`
+- `elevator.sound.command.down.entries` (entries for `/scelevator move` going down)
+
+#### `entries` path command syntax
+
+Use `{type,volume,pitch,delayMs}` format for each entry.  
+Separate multiple entries with `, ` to play sounds **simultaneously or in sequence**.
+
+```
+/scelevator set <path> {type,volume,pitch,delay} [, {type,volume,pitch,delay} ...]
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `type` | string | Minecraft sound ID (e.g. `minecraft:entity.experience_orb.pickup`) |
+| `volume` | decimal | Volume (e.g. `1.0`) |
+| `pitch` | decimal | Pitch (e.g. `0.69`) |
+| `delay` | integer | Delay in milliseconds (`0` = immediate) |
+
+**Command examples**:
+```mcfunction
+# Set a single up-sound entry
+/scelevator set elevator.sound.up.entries {minecraft:entity.experience_orb.pickup,1.0,0.69,0}
+
+# Two entries played simultaneously
+/scelevator set elevator.sound.up.entries {minecraft:block.note_block.pling,1.0,1.2,0}, {minecraft:ui.button.click,0.8,1.0,0}
+
+# Two entries played in sequence (200ms apart)
+/scelevator set elevator.sound.up.entries {minecraft:block.note_block.pling,1.0,1.2,0}, {minecraft:entity.experience_orb.pickup,0.5,1.5,200}
+
+# Set down-sound entry
+/scelevator set elevator.sound.down.entries {minecraft:entity.experience_orb.pickup,1.0,0.56,0}
+
+# Set command-move up-sound
+/scelevator set elevator.sound.command.up.entries {minecraft:ui.button.click,1.0,1.0,0}
+
+# Check current up-sound entries
+/scelevator get elevator.sound.up.entries
+```
+
+> **Tip**: Entries with different `delay` values play in sequence; entries with the same `delay` (or both `0`) play simultaneously.  
+> See the [Minecraft Wiki](https://minecraft.wiki/w/Sounds.json) for available sound IDs.
 
 #### floorbar
 - `elevator.floorbar.enabled`
@@ -132,6 +198,45 @@ Players with admin permission (`simplecometelevator.admin`) can manage settings 
 - `elevator.floorbar.style`
 - `elevator.floorbar.format`
 - `elevator.floorbar.use-y-progress`
+
+#### title
+- `elevator.title.up.enabled`
+- `elevator.title.up.title`
+- `elevator.title.up.subtitle`
+- `elevator.title.up.fade-in`
+- `elevator.title.up.stay`
+- `elevator.title.up.fade-out`
+- `elevator.title.down.enabled`
+- `elevator.title.down.title`
+- `elevator.title.down.subtitle`
+- `elevator.title.down.fade-in`
+- `elevator.title.down.stay`
+- `elevator.title.down.fade-out`
+- `elevator.title.command.up.enabled`
+- `elevator.title.command.up.title`
+- `elevator.title.command.up.subtitle`
+- `elevator.title.command.up.fade-in`
+- `elevator.title.command.up.stay`
+- `elevator.title.command.up.fade-out`
+- `elevator.title.command.down.enabled`
+- `elevator.title.command.down.title`
+- `elevator.title.command.down.subtitle`
+- `elevator.title.command.down.fade-in`
+- `elevator.title.command.down.stay`
+- `elevator.title.command.down.fade-out`
+
+#### actionbar
+- `elevator.actionbar.up.enabled`
+- `elevator.actionbar.up.format`
+- `elevator.actionbar.down.enabled`
+- `elevator.actionbar.down.format`
+- `elevator.actionbar.command.up.enabled`
+- `elevator.actionbar.command.up.format`
+- `elevator.actionbar.command.down.enabled`
+- `elevator.actionbar.command.down.format`
+
+#### messages
+- `messages.language`
 
 ---
 
@@ -220,6 +325,8 @@ format: "§eCooldown: {time}s"
 
 ## Sound Settings (`elevator.sound`)
 
+Sound settings use an **entries list** format. Each direction supports multiple sound entries played simultaneously or with a delay.
+
 ### Up Sound (`up`)
 
 #### `enabled`
@@ -230,28 +337,40 @@ format: "§eCooldown: {time}s"
 enabled: true
 ```
 
-#### `type`
-- **Type**: string
-- **Default**: `"minecraft:entity.experience_orb.pickup"`
+#### `broadcast`
+- **Type**: boolean
+- **Default**: `false`
+- **Description**: `true` plays sound in the world (audible to nearby players), `false` plays only for the moved player.
+- **Note**: `broadcast` is not editable via `/scelevator set`; edit `config.yml` directly.
+
+#### `entries`
+- **Type**: list of sound entries
+- **Description**: Each entry has the following fields:
+  - `type` — Minecraft sound ID (e.g. `"minecraft:entity.experience_orb.pickup"`)
+  - `volume` — Volume (default: `1.0`)
+  - `pitch` — Pitch (default: `1.0`)
+  - `delay` — Delay in milliseconds before playing (default: `0`)
 
 ```yaml
-type: "minecraft:block.note_block.pling"
+entries:
+  - type: "minecraft:entity.experience_orb.pickup"
+    volume: 1.0
+    pitch: 0.69
+    delay: 0
 ```
 
-#### `volume`
-- **Type**: decimal
-- **Default**: `1.0`
+> **Tip**: Multiple entries can be added to play several sounds at once or in sequence.
 
 ```yaml
-volume: 0.8
-```
-
-#### `pitch`
-- **Type**: decimal
-- **Default**: `0.69`
-
-```yaml
-pitch: 1.2
+entries:
+  - type: "minecraft:block.note_block.pling"
+    volume: 1.0
+    pitch: 1.2
+    delay: 0
+  - type: "minecraft:entity.experience_orb.pickup"
+    volume: 0.5
+    pitch: 1.5
+    delay: 200
 ```
 
 ### Down Sound (`down`)
@@ -260,32 +379,57 @@ pitch: 1.2
 - **Type**: boolean
 - **Default**: `true`
 
+#### `broadcast`
+- **Type**: boolean
+- **Default**: `false`
+- **Description**: `true` plays in-world, `false` plays only for the moved player.
+- **Note**: `broadcast` cannot be changed via `/scelevator set`.
+
 ```yaml
 enabled: true
 ```
 
-#### `type`
-- **Type**: string
-- **Default**: `"minecraft:entity.experience_orb.pickup"`
+#### `entries`
 
 ```yaml
-type: "minecraft:block.note_block.bass"
+entries:
+  - type: "minecraft:entity.experience_orb.pickup"
+    volume: 1.0
+    pitch: 0.56
+    delay: 0
 ```
 
-#### `volume`
-- **Type**: decimal
-- **Default**: `1.0`
+---
+
+## Command Sound Settings (`elevator.sound.command`)
+
+Sounds played when using the `/scelevator move <floor>` command.
+Same structure as the standard sound settings above.
+
+### `elevator.sound.command.up`
+
+#### `enabled`
+- **Type**: boolean
+- **Default**: `true`
+
+#### `entries`
 
 ```yaml
-volume: 0.8
-```
-
-#### `pitch`
-- **Type**: decimal
-- **Default**: `0.56`
-
-```yaml
-pitch: 0.8
+command:
+  up:
+    enabled: true
+    entries:
+      - type: "minecraft:entity.experience_orb.pickup"
+        volume: 1.0
+        pitch: 0.69
+        delay: 0
+  down:
+    enabled: true
+    entries:
+      - type: "minecraft:entity.experience_orb.pickup"
+        volume: 1.0
+        pitch: 0.56
+        delay: 0
 ```
 
 ---
@@ -314,6 +458,67 @@ pitch: 0.8
 - **Type**: boolean
 - **Default**: `false`
 - **Description**: If enabled, BossBar progress is based on Y-coordinate range instead of floor count.
+
+---
+
+## Title Settings (`elevator.title`)
+
+You can show title notifications for normal movement and `/scelevator move`.
+
+### `up` / `down`
+- `enabled`
+- `title`
+- `subtitle`
+- `fade-in` / `stay` / `fade-out` (ticks)
+
+### `command.up` / `command.down`
+- Same structure as `up` / `down`.
+- If not explicitly set, command title values fall back to normal movement title values.
+
+```yaml
+title:
+  up:
+    enabled: true
+    title: "§e↑UP↑"
+    subtitle: "§7{current}F / {total}F"
+    fade-in: 10
+    stay: 40
+    fade-out: 10
+```
+
+---
+
+## ActionBar Settings (`elevator.actionbar`)
+
+Shows a short floor notification in the action bar when moving.
+
+### `up` / `down` / `command.up` / `command.down`
+- `enabled`
+- `format` (`{current}` and `{total}` supported)
+
+```yaml
+actionbar:
+  up:
+    enabled: true
+    format: "§e↑ {current}F / {total}F"
+```
+
+---
+
+## Messages Settings (`messages`)
+
+### `language`
+- **Type**: string
+- **Default**: `"ja"`
+- **Available**: `ja`, `en`
+- **Description**: Language used for in-game command messages.
+
+```yaml
+messages:
+  language: en
+```
+
+> **Note**: Message text itself can be customized by editing `messages_ja.yml` or `messages_en.yml` in the `user-settings` folder.
 
 ---
 
@@ -374,31 +579,41 @@ elevator:
   sound:
     up:
       enabled: true
-      type: "minecraft:entity.IRON_GOLEM_ATTACK"
-      volume: 1.0
-      pitch: 1.0
+      entries:
+        - type: "minecraft:entity.experience_orb.pickup"
+          volume: 1.0
+          pitch: 0.69
+          delay: 0
     down:
       enabled: true
-      type: "minecraft:entity.IRON_GOLEM_ATTACK"
-      volume: 1.0
-      pitch: 1.0
+      entries:
+        - type: "minecraft:entity.experience_orb.pickup"
+          volume: 1.0
+          pitch: 0.56
+          delay: 0
 
   floorbar:
     enabled: true
     color: BLUE
     style: SOLID
     format: "§e{current}F / {total}F"
+
+messages:
+  language: en
 ```
 
-### Japanese Display Example
+### English Display Example
 
 ```yaml
 elevator:
   cooldown:
-    format: "§cクールダウン中: {time}秒"
+    format: "§cCooldown...: {time}sec"
 
   floorbar:
-    format: "§a{current}階 / {total}階"
+    format: "§aFloor {current} of {total}"
+
+messages:
+  language: en
 ```
 
 ### Tag-based Setup
@@ -438,7 +653,7 @@ elevator:
 
 ## Other
 
-Plugin version: `1.0.0`
+Plugin version: `1.1.0-1.21.x`
 Author: [Hisui.A](https://github.com/stabery)
 GitHub repository: https://github.com/stabery/SimpleCometElevator
 
