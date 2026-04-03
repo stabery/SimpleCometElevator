@@ -6,7 +6,7 @@
 
     <groupId>H_Amase</groupId>
     <artifactId>SimpleCometElevator</artifactId>
-    <version>1.0.0-1.21.x</version>
+    <version>1.1.0-1.21.x</version>
     <packaging>jar</packaging>
 
     <name>SimpleCometElevator</name>
