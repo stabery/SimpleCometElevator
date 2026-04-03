@@ -39,11 +39,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -69,7 +71,6 @@ public final class HisuiPluginUpdateChecker implements Listener {
 	private final LegacyComponentSerializer legacySerializer;
 
 	/*===== 設定値 =====*/
-	private File configFile;
 	private volatile UpdateCheckerConfig config;
 
 	/*===== 更新状態管理 =====*/
@@ -94,8 +95,7 @@ public final class HisuiPluginUpdateChecker implements Listener {
 
 	/*===== 設定再読み込み =====*/
 	public void reload() {
-		ensureDefaultConfigExists();
-		YamlConfiguration yaml = YamlConfiguration.loadConfiguration(configFile);
+		YamlConfiguration yaml = loadBundledConfig();
 
 		boolean enabled = yaml.getBoolean("enabled", true);
 		boolean notifyOnlinePlayersOnCheck = yaml.getBoolean("notify-online-players-on-check", true);
@@ -746,15 +746,21 @@ public final class HisuiPluginUpdateChecker implements Listener {
 		};
 	}
 
-	/*===== 設定ファイル準備 =====*/
-	private void ensureDefaultConfigExists() {
-		if (!plugin.getDataFolder().exists() && !plugin.getDataFolder().mkdirs()) {
-			plugin.getLogger().warning("Could not create plugin data folder for update checker.");
+	/*===== 設定読込 (JAR内固定) =====*/
+	private YamlConfiguration loadBundledConfig() {
+		InputStream resourceStream = plugin.getResource(CONFIG_FILE_NAME);
+		if (resourceStream == null) {
+			plugin.getLogger().warning("Bundled resource not found: " + CONFIG_FILE_NAME + " (using defaults)");
+			return new YamlConfiguration();
 		}
 
-		configFile = new File(plugin.getDataFolder(), CONFIG_FILE_NAME);
-		if (!configFile.exists()) {
-			plugin.saveResource(CONFIG_FILE_NAME, false);
+		try (InputStream input = resourceStream;
+			 InputStreamReader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
+			return YamlConfiguration.loadConfiguration(reader);
+		}
+		catch (Exception exception) {
+			plugin.getLogger().warning("Failed to load bundled resource " + CONFIG_FILE_NAME + ": " + exception.getMessage());
+			return new YamlConfiguration();
 		}
 	}
 
