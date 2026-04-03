@@ -1,7 +1,7 @@
 /*
 汎用プラグイン更新チェッカー！
 HisuiPluginUpdateChecker
-Version 1.0.0
+0Version 0.0.0
 */
 
 /*
@@ -79,6 +79,11 @@ public final class HisuiPluginUpdateChecker implements Listener {
 	private volatile String latestDownloadUrl;
 	private volatile boolean preReleaseAvailable;
 	private volatile String preReleaseVersion;
+	private volatile LastCheckResult lastCheckResult;
+	private volatile String lastCheckError;
+	private volatile String lastCheckRateLimitReset;
+	private volatile String lastCheckLatestMinecraftVersion;
+	private volatile String lastCheckCurrentMinecraftVersion;
 
 	/*===== Ko-fi URL =====*/
 	private volatile String kofiUrl;
@@ -192,6 +197,22 @@ public final class HisuiPluginUpdateChecker implements Listener {
 				"messages.player-pre-release-available",
 				"&6[UpdateChecker] Pre-release version available for {plugin_display_name}: &f{latest_version}&7 (current: {current_version}) &7| {primary_source_name}: {primary_link} &7| {secondary_source_name}: {secondary_link}"
 		);
+		String playerUpToDateMessage = yaml.getString(
+				"messages.player-up-to-date",
+				"&7[UpdateChecker] {plugin_display_name} is up to date. Current version: &f{current_version}"
+		);
+		String playerCheckFailedMessage = yaml.getString(
+				"messages.player-check-failed",
+				"&c[UpdateChecker] Failed to check updates for {plugin_display_name}: {error}"
+		);
+		String playerMinecraftVersionMismatchMessage = yaml.getString(
+				"messages.player-minecraft-version-mismatch",
+				"&7[UpdateChecker] Update found for {plugin_display_name}, but Minecraft version mismatch. Required: {latest_minecraft_version}, Current: {current_minecraft_version}"
+		);
+		String playerRateLimitedMessage = yaml.getString(
+				"messages.player-rate-limited",
+				"&c[UpdateChecker] GitHub API rate limit exceeded for {plugin_display_name}. Resets at: {rate_limit_reset}"
+		);
 		String minecraftVersionMismatchMessage = yaml.getString(
 				"messages.minecraft-version-mismatch",
 				"&7[UpdateChecker] Update found for {plugin_display_name}, but Minecraft version mismatch. Required: {latest_minecraft_version}, Current: {current_minecraft_version}"
@@ -231,6 +252,10 @@ public final class HisuiPluginUpdateChecker implements Listener {
 				playerUpdateAvailableMessage,
 				consolePreReleaseAvailableMessage,
 				playerPreReleaseAvailableMessage,
+				playerUpToDateMessage,
+				playerCheckFailedMessage,
+				playerMinecraftVersionMismatchMessage,
+				playerRateLimitedMessage,
 				minecraftVersionMismatchMessage,
 				consoleRateLimitedMessage,
 				githubToken
@@ -267,7 +292,7 @@ public final class HisuiPluginUpdateChecker implements Listener {
 	/*===== 参加時通知 =====*/
 	@EventHandler
 	public void onPlayerJoin(PlayerJoinEvent event) {
-		if (!updateAvailable || !plugin.isEnabled()) {
+		if (!plugin.isEnabled()) {
 			return;
 		}
 
@@ -281,7 +306,13 @@ public final class HisuiPluginUpdateChecker implements Listener {
 			return;
 		}
 
-		sendPlayerUpdateMessage(cfg, player, preReleaseAvailable);
+		// ログイン時は更新がある場合のみ通知する
+		if (lastCheckResult != LastCheckResult.UPDATE_AVAILABLE
+				&& lastCheckResult != LastCheckResult.PRE_RELEASE_AVAILABLE) {
+			return;
+		}
+
+		sendPlayerLastCheckResultMessage(cfg, player);
 	}
 
 	/*===== 更新判定 =====*/
@@ -320,15 +351,40 @@ public final class HisuiPluginUpdateChecker implements Listener {
 
 			// Minecraftバージョンが一致するかチェック
 			if (!isMinecraftVersionCompatible(cfg, currentVersionInfo, latestVersionInfo)) {
-				plugin.getLogger().info(stripColors(formatMessage(
-						cfg,
-						cfg.minecraftVersionMismatchMessage,
-						release.version(),
-						firstNonBlank(release.downloadUrl(), cfg.primarySourceUrl),
+				String resolvedDownloadUrl = firstNonBlank(release.downloadUrl(), cfg.primarySourceUrl);
+				latestVersion = release.version();
+				latestDownloadUrl = resolvedDownloadUrl;
+				updateAvailable = false;
+				preReleaseAvailable = false;
+				preReleaseVersion = null;
+				setLastCheckResult(
+						LastCheckResult.MINECRAFT_VERSION_MISMATCH,
+						null,
+						null,
 						latestVersionInfo.minecraftVersion,
 						currentVersionInfo.minecraftVersion
-				)));
-				resetStatus();
+				);
+
+				if (!plugin.isEnabled()) {
+					return;
+				}
+
+				Bukkit.getScheduler().runTask(plugin, () -> {
+					if (!plugin.isEnabled()) {
+						return;
+					}
+					plugin.getLogger().info(stripColors(formatMessage(
+							cfg,
+							cfg.minecraftVersionMismatchMessage,
+							release.version(),
+							resolvedDownloadUrl,
+							latestVersionInfo.minecraftVersion,
+							currentVersionInfo.minecraftVersion
+					)));
+					if (cfg.notifyOnlinePlayersOnCheck) {
+						notifyOnlineAdmins(cfg);
+					}
+				});
 				return;
 			}
 
@@ -341,13 +397,19 @@ public final class HisuiPluginUpdateChecker implements Listener {
 					return;
 				}
 
+				setLastCheckResult(LastCheckResult.UP_TO_DATE, null, null, null, null);
 				Bukkit.getScheduler().runTask(plugin, () -> {
 					if (!plugin.isEnabled()) {
 						return;
 					}
 					plugin.getLogger().info(stripColors(formatMessage(cfg, cfg.consoleUpToDateMessage, currentVersion, cfg.primarySourceUrl, null)));
+					if (cfg.notifyOnlinePlayersOnCheck) {
+						notifyOnlineAdmins(cfg);
+					}
 				});
-				resetStatus();
+				updateAvailable = false;
+				preReleaseAvailable = false;
+				preReleaseVersion = null;
 				return;
 			}
 
@@ -358,6 +420,7 @@ public final class HisuiPluginUpdateChecker implements Listener {
 			updateAvailable = true;
 			preReleaseAvailable = isPreRelease;
 			preReleaseVersion = isPreRelease ? release.version() : null;
+			setLastCheckResult(isPreRelease ? LastCheckResult.PRE_RELEASE_AVAILABLE : LastCheckResult.UPDATE_AVAILABLE, null, null, null, null);
 
 			if (!plugin.isEnabled()) {
 				return;
@@ -375,7 +438,7 @@ public final class HisuiPluginUpdateChecker implements Listener {
 				}
 				
 				if (cfg.notifyOnlinePlayersOnCheck) {
-					notifyOnlineAdmins(cfg, isPreRelease);
+					notifyOnlineAdmins(cfg);
 				}
 			});
 		} catch (RateLimitException rle) {
@@ -387,6 +450,7 @@ public final class HisuiPluginUpdateChecker implements Listener {
 
 	private void handleCheckFailure(UpdateCheckerConfig cfg, String errorMessage) {
 		resetStatus();
+		setLastCheckResult(LastCheckResult.CHECK_FAILED, errorMessage, null, null, null);
 		if (!plugin.isEnabled()) {
 			return;
 		}
@@ -395,20 +459,139 @@ public final class HisuiPluginUpdateChecker implements Listener {
 				return;
 			}
 			plugin.getLogger().warning(stripColors(formatMessage(cfg, cfg.consoleCheckFailedMessage, null, null, errorMessage)));
+			if (cfg.notifyOnlinePlayersOnCheck) {
+				notifyOnlineAdmins(cfg);
+			}
 		});
 	}
 
-	private void notifyOnlineAdmins(UpdateCheckerConfig cfg, boolean isPreRelease) {
+	private void notifyOnlineAdmins(UpdateCheckerConfig cfg) {
 		for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
 			if (onlinePlayer.hasPermission(cfg.notifyPermission)) {
-				sendPlayerUpdateMessage(cfg, onlinePlayer, isPreRelease);
+				sendPlayerLastCheckResultMessage(cfg, onlinePlayer);
 			}
 		}
 	}
 
-	private void sendPlayerUpdateMessage(UpdateCheckerConfig cfg, Player player, boolean isPreRelease) {
-		String template = isPreRelease ? cfg.playerPreReleaseAvailableMessage : cfg.playerUpdateAvailableMessage;
-		player.sendMessage(buildPlayerMessage(cfg, template, latestVersion, latestDownloadUrl));
+	private void sendPlayerLastCheckResultMessage(UpdateCheckerConfig cfg, Player player) {
+		LastCheckResult result = lastCheckResult;
+		if (result == null || result == LastCheckResult.NONE) {
+			return;
+		}
+
+		switch (result) {
+			case UPDATE_AVAILABLE -> player.sendMessage(buildPlayerMessage(
+					cfg,
+					cfg.playerUpdateAvailableMessage,
+					latestVersion,
+					latestDownloadUrl,
+					null,
+					null,
+					null,
+					null
+			));
+			case PRE_RELEASE_AVAILABLE -> player.sendMessage(buildPlayerMessage(
+					cfg,
+					cfg.playerPreReleaseAvailableMessage,
+					latestVersion,
+					latestDownloadUrl,
+					null,
+					null,
+					null,
+					null
+			));
+			case UP_TO_DATE -> player.sendMessage(buildPlayerMessage(
+					cfg,
+					cfg.playerUpToDateMessage,
+					currentVersion(),
+					cfg.primarySourceUrl,
+					null,
+					null,
+					null,
+					null
+			));
+			case MINECRAFT_VERSION_MISMATCH -> player.sendMessage(buildPlayerMessage(
+					cfg,
+					cfg.playerMinecraftVersionMismatchMessage,
+					latestVersion,
+					latestDownloadUrl,
+					null,
+					null,
+					lastCheckLatestMinecraftVersion,
+					lastCheckCurrentMinecraftVersion
+			));
+			case CHECK_FAILED -> player.sendMessage(buildPlayerMessage(
+					cfg,
+					cfg.playerCheckFailedMessage,
+					null,
+					null,
+					lastCheckError,
+					null,
+					null,
+					null
+			));
+			case RATE_LIMITED -> player.sendMessage(buildPlayerMessage(
+					cfg,
+					cfg.playerRateLimitedMessage,
+					null,
+					null,
+					null,
+					lastCheckRateLimitReset,
+					null,
+					null
+			));
+			default -> {
+			}
+		}
+	}
+
+	private Component buildPlayerMessage(UpdateCheckerConfig cfg,
+									 String template,
+									 String resolvedLatestVersion,
+									 String resolvedDownloadUrl,
+									 String errorMessage,
+									 String rateLimitReset,
+									 String latestMcVersion,
+									 String currentMcVersion) {
+		String message = formatBaseMessage(cfg, template, resolvedLatestVersion, resolvedDownloadUrl, errorMessage)
+				.replace("{rate_limit_reset}", defaultString(rateLimitReset))
+				.replace("{latest_minecraft_version}", defaultString(latestMcVersion))
+				.replace("{current_minecraft_version}", defaultString(currentMcVersion));
+		String downloadLinkUrl = firstNonBlank(resolvedDownloadUrl, latestDownloadUrl, cfg.primarySourceUrl);
+		Component result = Component.empty();
+		int cursor = 0;
+
+		while (cursor < message.length()) {
+			int downloadIndex = message.indexOf(PRIMARY_LINK_PLACEHOLDER, cursor);
+			int modrinthIndex = message.indexOf(SECONDARY_LINK_PLACEHOLDER, cursor);
+			int nextIndex = nextPlaceholderIndex(downloadIndex, modrinthIndex);
+
+			if (nextIndex < 0) {
+				return result.append(deserializeLegacy(message.substring(cursor)));
+			}
+
+			if (nextIndex > cursor) {
+				result = result.append(deserializeLegacy(message.substring(cursor, nextIndex)));
+			}
+
+			if (nextIndex == downloadIndex) {
+				result = result.append(buildLinkComponent(cfg.primarySourceDisplayName, downloadLinkUrl));
+				cursor = downloadIndex + PRIMARY_LINK_PLACEHOLDER.length();
+			} else {
+				result = result.append(buildLinkComponent(cfg.secondarySourceDisplayName, cfg.secondarySourceUrl));
+				cursor = modrinthIndex + SECONDARY_LINK_PLACEHOLDER.length();
+			}
+		}
+
+		return result;
+	}
+
+	private void setLastCheckResult(LastCheckResult result, String errorMessage, String rateLimitReset, String latestMcVersion, String currentMcVersion) {
+		lastCheckResult = result;
+		lastCheckError = trimToNull(errorMessage);
+		lastCheckRateLimitReset = trimToNull(rateLimitReset);
+		lastCheckLatestMinecraftVersion = trimToNull(latestMcVersion);
+		lastCheckCurrentMinecraftVersion = trimToNull(currentMcVersion);
 	}
 
 	private HttpResponse<String> sendRequest(UpdateCheckerConfig cfg, String url) throws Exception {
@@ -525,37 +708,6 @@ public final class HisuiPluginUpdateChecker implements Listener {
 				.replace("{download_url}", defaultString(firstNonBlank(resolvedDownloadUrl, latestDownloadUrl, cfg.primarySourceUrl)))
 				.replace("{permission}", defaultString(cfg.notifyPermission))
 				.replace("{error}", defaultString(errorMessage));
-	}
-
-	private Component buildPlayerMessage(UpdateCheckerConfig cfg, String template, String resolvedLatestVersion, String resolvedDownloadUrl) {
-		String message = formatBaseMessage(cfg, template, resolvedLatestVersion, resolvedDownloadUrl, null);
-		String downloadLinkUrl = firstNonBlank(resolvedDownloadUrl, latestDownloadUrl, cfg.primarySourceUrl);
-		Component result = Component.empty();
-		int cursor = 0;
-
-		while (cursor < message.length()) {
-			int downloadIndex = message.indexOf(PRIMARY_LINK_PLACEHOLDER, cursor);
-			int modrinthIndex = message.indexOf(SECONDARY_LINK_PLACEHOLDER, cursor);
-			int nextIndex = nextPlaceholderIndex(downloadIndex, modrinthIndex);
-
-			if (nextIndex < 0) {
-				return result.append(deserializeLegacy(message.substring(cursor)));
-			}
-
-			if (nextIndex > cursor) {
-				result = result.append(deserializeLegacy(message.substring(cursor, nextIndex)));
-			}
-
-			if (nextIndex == downloadIndex) {
-				result = result.append(buildLinkComponent(cfg.primarySourceDisplayName, downloadLinkUrl));
-				cursor = downloadIndex + PRIMARY_LINK_PLACEHOLDER.length();
-			} else {
-				result = result.append(buildLinkComponent(cfg.secondarySourceDisplayName, cfg.secondarySourceUrl));
-				cursor = modrinthIndex + SECONDARY_LINK_PLACEHOLDER.length();
-			}
-		}
-
-		return result;
 	}
 
 	private String applyConsoleLinkPlaceholders(UpdateCheckerConfig cfg, String template, String resolvedPrimaryLinkUrl) {
@@ -770,6 +922,7 @@ public final class HisuiPluginUpdateChecker implements Listener {
 		latestDownloadUrl = null;
 		preReleaseAvailable = false;
 		preReleaseVersion = null;
+		setLastCheckResult(LastCheckResult.NONE, null, null, null, null);
 	}
 
 	private String colorize(String message) {
@@ -895,7 +1048,9 @@ public final class HisuiPluginUpdateChecker implements Listener {
 									   boolean enforceMinecraftVersionMatch, String consoleUpdateAvailableMessage,
 									   String consoleUpToDateMessage, String consoleCheckFailedMessage,
 									   String playerUpdateAvailableMessage, String consolePreReleaseAvailableMessage,
-									   String playerPreReleaseAvailableMessage, String minecraftVersionMismatchMessage,
+									   String playerPreReleaseAvailableMessage, String playerUpToDateMessage,
+									   String playerCheckFailedMessage, String playerMinecraftVersionMismatchMessage,
+									   String playerRateLimitedMessage, String minecraftVersionMismatchMessage,
 									   String consoleRateLimitedMessage, String githubToken) {
 	}
 
@@ -956,6 +1111,7 @@ public final class HisuiPluginUpdateChecker implements Listener {
 
 	private void handleRateLimitExceeded(UpdateCheckerConfig cfg, String resetTime) {
 		resetStatus();
+		setLastCheckResult(LastCheckResult.RATE_LIMITED, null, resetTime, null, null);
 		if (!plugin.isEnabled()) {
 			return;
 		}
@@ -970,6 +1126,19 @@ public final class HisuiPluginUpdateChecker implements Listener {
 					.replace("{current_version}", currentVersion())
 					.replace("{rate_limit_reset}", defaultString(resetTime));
 			plugin.getLogger().warning(stripColors(message));
+			if (cfg.notifyOnlinePlayersOnCheck) {
+				notifyOnlineAdmins(cfg);
+			}
 		});
+	}
+
+	private enum LastCheckResult {
+		NONE,
+		UPDATE_AVAILABLE,
+		PRE_RELEASE_AVAILABLE,
+		UP_TO_DATE,
+		MINECRAFT_VERSION_MISMATCH,
+		CHECK_FAILED,
+		RATE_LIMITED
 	}
 }

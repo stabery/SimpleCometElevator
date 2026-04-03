@@ -1,7 +1,7 @@
 
 # 汎用プラグイン更新チェッカー！の設定ファイル
 # HisuiPluginUpdateChecker
-# Version 1.0.0
+# Version 0.0.0
 
 
 enabled: true
@@ -74,6 +74,10 @@ messages:
   player-update-available: "&e[UpdateChecker] An update is available for {plugin_display_name}!: &f{latest_version}&7 (current: {current_version}) &7| {primary_source_name}: {primary_link} &7| {secondary_source_name}: {secondary_link}"
   console-pre-release-available: "&6[UpdateChecker] Pre-release version of {plugin_display_name} is available!: &f{latest_version}&6 (current: &f{current_version}&6) &7| {primary_source_name}: {primary_link} &7| {secondary_source_name}: {secondary_link}"
   player-pre-release-available: "&6[UpdateChecker] A pre-release update is available for {plugin_display_name}!: &f{latest_version}&7 (current: {current_version}) &7| {primary_source_name}: {primary_link} &7| {secondary_source_name}: {secondary_link}"
+  player-up-to-date: "&7[UpdateChecker] {plugin_display_name} is up to date! Current version: &f{current_version}"
+  player-check-failed: "&c[UpdateChecker] Failed to check updates for {plugin_display_name}: {error}"
+  player-minecraft-version-mismatch: "&7[UpdateChecker] Update found for {plugin_display_name}, but Minecraft version mismatch. Required: {latest_minecraft_version}, Current: {current_minecraft_version}"
+  player-rate-limited: "&c[UpdateChecker] GitHub API rate limit exceeded for {plugin_display_name}. Resets at: {rate_limit_reset}"
   minecraft-version-mismatch: "&7[UpdateChecker] Update found for {plugin_display_name}, but Minecraft version mismatch. Required: {latest_minecraft_version}, Current: {current_minecraft_version}"
   # {rate_limit_reset}: レート制限が解除される時刻と残り時間
   console-rate-limited: "&c[UpdateChecker] GitHub API rate limit exceeded for {plugin_display_name}. Resets at: {rate_limit_reset}"
