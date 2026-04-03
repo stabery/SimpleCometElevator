@@ -1,16 +1,20 @@
 name: SimpleCometElevator
-version: '1.0.0-1.21.x'
+version: '1.1.0-1.21.x'
 main: H_Amase.simpleCometElevator.SimpleCometElevator
 api-version: '1.21'
+authors: [Hisui.A]
+website: 'https://github.com/stabery'
 
 commands:
   simplecometelevator:
-    description: SimpleCometElevator admin command
-    usage: "/<command> <reload|get|set|help>"
-    aliases: [scelevator]
-    permission: simplecometelevator.admin
+    description: SimpleCometElevator command
+    usage: "/<command> <reload|check|get|set|reset|help|info|move>"
+    aliases: [scelevator, sce]
 
 permissions:
   simplecometelevator.admin:
     description: Allows reloading and editing SimpleCometElevator config
     default: op
+  simplecometelevator.move:
+    description: Allows using the /sce move command to travel to a specific floor
+    default: true
