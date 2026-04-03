@@ -62,10 +62,10 @@ Place the same floor blocks vertically with enough space between them.
 
 ### Elevator Controls
 
-| Action | Input | Effect |
-|---|---|---|
-| Up | Jump on floor block | Teleport to upper floor |
-| Down | Sneak on floor block | Teleport to lower floor |
+| Action | Input                | Effect                  |
+|--------|----------------------|-------------------------|
+| Up     | Jump on floor block  | Teleport to upper floor |
+| Down   | Sneak on floor block | Teleport to lower floor |
 
 > **Tip**: You can customize floor and passable blocks in `config.yml`.
 
