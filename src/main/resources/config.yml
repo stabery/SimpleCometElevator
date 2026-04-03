@@ -41,18 +41,56 @@ elevator:
     seconds: 1
     format: "§cCooldown: {time}s"
 
+  command:
+    move:
+      enabled: true
+
   sound:
     up:
       enabled: true
-      type: minecraft:entity.experience_orb.pickup
-      volume: 1.0
-      pitch: 0.69
+      broadcast: false
+      entries:
+        - type: minecraft:entity.experience_orb.pickup
+          volume: 1.0
+          pitch: 0.69
+          delay: 0
 
     down:
       enabled: true
-      type: minecraft:entity.experience_orb.pickup
-      volume: 1.0
-      pitch: 0.56
+      broadcast: false
+      entries:
+        - type: minecraft:entity.experience_orb.pickup
+          volume: 1.0
+          pitch: 0.56
+          delay: 0
+
+    command:
+      up:
+        enabled: true
+        broadcast: false
+        entries:
+          - type: minecraft:entity.experience_orb.pickup
+            volume: 1.0
+            pitch: 0.56
+            delay: 0
+          - type: minecraft:entity.experience_orb.pickup
+            volume: 1.0
+            pitch: 0.69
+            delay: 350
+
+      down:
+        enabled: true
+        broadcast: false
+        entries:
+          - type: minecraft:entity.experience_orb.pickup
+            volume: 1.0
+            pitch: 0.69
+            delay: 0
+          - type: minecraft:entity.experience_orb.pickup
+            volume: 1.0
+            pitch: 0.56
+            delay: 350
+
 
   floorbar:
     enabled: true
@@ -60,3 +98,53 @@ elevator:
     style: SOLID
     format: "§e{current}F / {total}F"
     use-y-progress: false
+
+  title:
+    up:
+      enabled: false
+      title: "§e↑UP↑"
+      subtitle: "§7{current}F / {total}F"
+      fade-in: 10
+      stay: 40
+      fade-out: 10
+    down:
+      enabled: false
+      title: "§e↓DOWN↓"
+      subtitle: "§7{current}F / {total}F"
+      fade-in: 10
+      stay: 40
+      fade-out: 10
+    command:
+      up:
+        enabled: false
+        title: "§b↑{current}F↑"
+        subtitle: "§7/ {total}F"
+        fade-in: 10
+        stay: 40
+        fade-out: 10
+      down:
+        enabled: false
+        title: "§b↓{current}F↓"
+        subtitle: "§7/ {total}F"
+        fade-in: 10
+        stay: 40
+        fade-out: 10
+
+  actionbar:
+    up:
+      enabled: false
+      format: "§e↑ {current}F / {total}F"
+    down:
+      enabled: false
+      format: "§e↓ {current}F / {total}F"
+    command:
+      up:
+        enabled: false
+        format: "§b↑ {current}F / {total}F"
+      down:
+        enabled: false
+        format: "§b↓ {current}F / {total}F"
+
+messages:
+  language: en
+
