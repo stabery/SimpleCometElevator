@@ -8,7 +8,7 @@ https://modrinth.com/plugin/simplecometelevator
 
 SimpleCometElevator - Minecraft(Paper)用プラグイン
 
-対応バージョン: **Paper / Minecraft 1.21.x**
+対応バージョン: **Paper / Minecraft 1.21.x ~ 26.1.x**
 
 最低限の機能を備えた至ってシンプルなエレベータープラグインです。
 
