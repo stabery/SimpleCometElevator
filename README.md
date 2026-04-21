@@ -17,7 +17,7 @@ For full settings and detailed explanations:
 
 A simple elevator plugin for Minecraft (Paper).
 
-Supported version: **Paper / Minecraft 1.21.x**
+Supported version: **Paper / Minecraft 1.21.x ~ 26.1.x**
 
 - Jump to go up
 - Sneak to go down
